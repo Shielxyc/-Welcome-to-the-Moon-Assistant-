@@ -1,0 +1,4898 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#05070f">
+<title>欢迎来到月球 · 星舰配对台</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg: #05070f;
+    --ink: #eef2ff;
+    --muted: #929fbd;
+    --line: rgba(163, 184, 235, .14);
+    --gold: #f2cf7a;
+    --gold-deep: #e1ab53;
+    --cyan: #7cd9ff;
+    --mint: #7fe1b5;
+    --danger: #ff897f;
+    --font-sans: "Microsoft YaHei UI", "PingFang SC", "Noto Sans SC", "Hiragino Sans GB", system-ui, sans-serif;
+    --font-mono: "Cascadia Code", "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+    --font-number: "Palatino Linotype", "Book Antiqua", "Georgia", "Times New Roman", serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html {
+    min-width: 320px;
+    background: var(--bg);
+    scrollbar-gutter: stable both-edges;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100svh;
+    overflow-x: hidden;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  button { font: inherit; }
+  button, a { -webkit-tap-highlight-color: transparent; }
+  ::selection { background: rgba(242, 207, 122, .3); color: #fff; }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  .sr-only {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0);
+    white-space: nowrap; border: 0;
+  }
+
+  /* ---------- deep-space backdrop ---------- */
+  .space {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 95% 70% at 50% -18%, rgba(41, 62, 122, .42), transparent 62%),
+      radial-gradient(ellipse 45% 38% at 92% 8%, rgba(171, 144, 90, .12), transparent 66%),
+      linear-gradient(180deg, #070b18 0%, #04060e 54%, #060914 100%);
+  }
+
+  .space::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background:
+      radial-gradient(ellipse at 12% 44%, rgba(45, 84, 153, .12), transparent 38%),
+      radial-gradient(ellipse at 74% 72%, rgba(118, 85, 145, .08), transparent 36%);
+    filter: blur(24px);
+  }
+
+  .space::after {
+    content: "";
+    position: absolute;
+    left: -20%;
+    right: -20%;
+    bottom: -17%;
+    height: 54%;
+    opacity: .28;
+    background-image:
+      linear-gradient(rgba(111, 147, 220, .12) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(111, 147, 220, .12) 1px, transparent 1px);
+    background-size: 58px 58px;
+    transform: perspective(650px) rotateX(68deg);
+    transform-origin: center bottom;
+    -webkit-mask-image: linear-gradient(to top, #000 0%, rgba(0,0,0,.55) 36%, transparent 100%);
+    mask-image: linear-gradient(to top, #000 0%, rgba(0,0,0,.55) 36%, transparent 100%);
+  }
+
+  .stars { position: absolute; inset: 0; }
+  .star {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    background: #e7efff;
+    opacity: var(--opacity);
+    box-shadow: 0 0 calc(var(--size) * 3) rgba(157, 195, 255, .7);
+    animation: twinkle var(--duration) ease-in-out var(--delay) infinite alternate;
+  }
+
+  .moon {
+    position: absolute;
+    top: -24vw;
+    right: -16vw;
+    width: min(60vw, 800px);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    opacity: .74;
+    background:
+      radial-gradient(circle at 33% 31%, rgba(255, 248, 222, .62) 0%, rgba(229, 222, 199, .29) 17%, rgba(137, 148, 167, .15) 38%, rgba(57, 69, 98, .055) 57%, transparent 69%);
+    filter: blur(.4px);
+  }
+
+  .moon::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background:
+      radial-gradient(circle at 35% 42%, rgba(58, 69, 91, .15) 0 2.6%, transparent 3.1%),
+      radial-gradient(circle at 52% 58%, rgba(59, 70, 92, .12) 0 4.1%, transparent 4.7%),
+      radial-gradient(circle at 64% 35%, rgba(61, 72, 94, .12) 0 1.8%, transparent 2.4%),
+      radial-gradient(circle at 44% 67%, rgba(61, 72, 94, .09) 0 2.2%, transparent 2.8%),
+      radial-gradient(circle at 58% 45%, rgba(255, 250, 230, .1) 0 7%, transparent 8%);
+  }
+
+  .shooting-star {
+    position: absolute;
+    top: 22%;
+    left: 71%;
+    width: 108px;
+    height: 1px;
+    border-radius: 99px;
+    opacity: 0;
+    background: linear-gradient(90deg, transparent, rgba(224, 239, 255, .8), #fff);
+    transform: rotate(-31deg);
+    animation: shoot 17s ease-in 7s infinite;
+  }
+
+  /* ---------- page frame ---------- */
+  .app {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 1.6vw, 20px);
+    width: min(1340px, 100%);
+    min-height: 100svh;
+    margin: 0 auto;
+    padding: clamp(14px, 1.8vw, 22px) clamp(13px, 2.4vw, 34px) 10px;
+  }
+
+  .hud {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    gap: clamp(14px, 2.2vw, 30px);
+    padding-bottom: clamp(12px, 1.5vw, 16px);
+    border-bottom: 1px solid var(--line);
+    animation: riseIn .7s cubic-bezier(.2, .75, .25, 1) both;
+  }
+
+  .hud::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -1px;
+    width: 92px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    opacity: .8;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: clamp(11px, 1.3vw, 16px);
+    min-width: 0;
+  }
+
+  .brand-mark {
+    position: relative;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    width: clamp(43px, 4.3vw, 56px);
+    aspect-ratio: 1;
+    border: 1px solid rgba(242, 207, 122, .34);
+    border-radius: 50%;
+    background: radial-gradient(circle at 34% 28%, rgba(242, 207, 122, .2), rgba(9, 15, 30, .76) 70%);
+    box-shadow: 0 0 30px rgba(242, 207, 122, .08), inset 0 0 24px rgba(255, 255, 255, .035);
+  }
+
+  .brand-mark::before {
+    content: "";
+    width: 41%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: inset -6px -3px 0 0 #070b17, 0 0 18px rgba(242, 207, 122, .3);
+    transform: translate(1px, -1px);
+  }
+
+  .brand-mark::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border: 1px dashed rgba(242, 207, 122, .16);
+    border-radius: 50%;
+    animation: slowOrbit 44s linear infinite;
+  }
+
+  .brand-copy { min-width: 0; }
+
+  .eyebrow {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(7px, .68vw, 10px);
+    line-height: 1.4;
+    letter-spacing: .23em;
+    white-space: nowrap;
+  }
+
+  h1 {
+    margin: 4px 0 0;
+    color: #f5f7ff;
+    font-size: clamp(1.72rem, 3vw, 2.65rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: .035em;
+    white-space: nowrap;
+  }
+
+  h1 span {
+    color: var(--gold);
+    text-shadow: 0 0 34px rgba(242, 207, 122, .19);
+  }
+
+  .hud-readout {
+    display: flex;
+    align-items: stretch;
+    height: 57px;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    background: linear-gradient(180deg, rgba(17, 26, 48, .72), rgba(7, 11, 23, .62));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+  }
+
+  .readout {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: clamp(65px, 6.3vw, 86px);
+    padding: 0 clamp(12px, 1.5vw, 19px);
+  }
+
+  .readout + .readout::before {
+    content: "";
+    position: absolute;
+    top: 23%;
+    bottom: 23%;
+    left: 0;
+    width: 1px;
+    background: var(--line);
+  }
+
+  .readout-label {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(7px, .58vw, 9px);
+    letter-spacing: .16em;
+    line-height: 1;
+  }
+
+  .readout-value {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    margin-top: 4px;
+    line-height: 1;
+  }
+
+  .readout-value strong {
+    font-family: var(--font-mono);
+    font-size: clamp(1.08rem, 1.55vw, 1.36rem);
+    font-weight: 600;
+    letter-spacing: -.04em;
+  }
+
+  .readout-value small {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: .55rem;
+    letter-spacing: .02em;
+  }
+
+  .readout--draw strong { color: var(--gold); }
+  .readout--round strong { color: var(--cyan); }
+  .readout--recycle strong { color: var(--mint); }
+
+  .controls {
+    display: flex;
+    align-items: stretch;
+    gap: 9px;
+  }
+
+  .btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 57px;
+    padding: 0 16px;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    background: linear-gradient(180deg, rgba(19, 28, 51, .9), rgba(8, 12, 24, .88));
+    color: var(--ink);
+    cursor: pointer;
+    transition: transform .22s ease, border-color .22s ease, background .22s ease, box-shadow .22s ease, opacity .22s ease;
+    white-space: nowrap;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    border-color: rgba(206, 218, 255, .3);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .24);
+  }
+
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { cursor: not-allowed; opacity: .46; transform: none !important; box-shadow: none; }
+
+  #new-game { min-width: 119px; }
+  #flip { min-width: 146px; justify-content: flex-start; }
+
+  .btn-glyph {
+    display: grid;
+    place-items: center;
+    width: 27px;
+    height: 27px;
+    flex: 0 0 auto;
+    border: 1px solid rgba(174, 193, 235, .18);
+    border-radius: 50%;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .btn-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    line-height: 1;
+  }
+
+  .btn-kicker {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: .49rem;
+    letter-spacing: .15em;
+    line-height: 1;
+  }
+
+  .btn-main {
+    font-size: .91rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    line-height: 1.1;
+  }
+
+  .btn--primary {
+    border-color: rgba(255, 224, 157, .78);
+    background: linear-gradient(135deg, #f9e09a 0%, #efc56d 54%, #dca94d 100%);
+    color: #1b170d;
+    box-shadow: 0 12px 32px rgba(220, 169, 77, .17), inset 0 1px 0 rgba(255, 255, 255, .62);
+  }
+
+  .btn--primary:hover {
+    border-color: #ffe8ae;
+    box-shadow: 0 16px 38px rgba(220, 169, 77, .25), inset 0 1px 0 rgba(255, 255, 255, .72);
+  }
+
+  .btn--primary .btn-glyph {
+    border-color: rgba(27, 23, 13, .16);
+    color: #302715;
+    background: rgba(255, 255, 255, .14);
+  }
+
+  .btn--primary .btn-kicker { color: rgba(27, 23, 13, .58); }
+  .btn--primary:disabled { cursor: not-allowed; }
+  .btn.is-busy .btn-glyph { animation: slowOrbit 1.2s linear infinite; }
+
+  /* ---------- board shell ---------- */
+  .game-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(220px, 24vw, 330px);
+    align-items: stretch;
+    gap: clamp(10px, 1.45vw, 18px);
+  }
+
+  .board-zone {
+    min-width: 0;
+    position: relative;
+    overflow: hidden;
+    padding: clamp(14px, 1.8vw, 22px) clamp(12px, 1.8vw, 22px) clamp(12px, 1.6vw, 18px);
+    border: 1px solid rgba(158, 181, 235, .15);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(69, 97, 154, .14), transparent 42%),
+      linear-gradient(180deg, rgba(12, 19, 38, .9), rgba(5, 8, 18, .84));
+    box-shadow: 0 30px 80px rgba(0, 0, 0, .3), inset 0 1px 0 rgba(255, 255, 255, .04);
+    animation: riseIn .75s .1s cubic-bezier(.2, .75, .25, 1) both;
+  }
+
+  .board-zone::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(242, 207, 122, .56), transparent);
+    pointer-events: none;
+  }
+
+  .board-zone::after {
+    content: "";
+    position: absolute;
+    inset: 12px;
+    border: 1px solid rgba(255, 255, 255, .02);
+    border-radius: 19px;
+    pointer-events: none;
+  }
+
+  .board-zone > * { position: relative; z-index: 1; }
+
+  .board-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .section-kicker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 5px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(7px, .66vw, 9px);
+    letter-spacing: .2em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .section-kicker::before {
+    content: "";
+    width: 18px;
+    height: 1px;
+    background: var(--gold);
+    opacity: .7;
+  }
+
+  .board-head h2 {
+    margin: 0;
+    color: #eaf0ff;
+    font-size: clamp(1.12rem, 1.6vw, 1.42rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: .08em;
+  }
+
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: min(760px, 100%);
+    min-height: 31px;
+    margin: 0;
+    padding: 7px 11px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: rgba(4, 8, 17, .52);
+    color: #c3d0e9;
+    font-size: clamp(.66rem, .76vw, .77rem);
+    line-height: 1.45;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 10px rgba(127, 225, 181, .75);
+  }
+
+  .status[data-tone="active"] .status-dot {
+    background: var(--cyan);
+    box-shadow: 0 0 11px rgba(124, 217, 255, .8);
+  }
+
+  .status[data-tone="recycle"] .status-dot {
+    background: var(--gold);
+    box-shadow: 0 0 11px rgba(242, 207, 122, .8);
+  }
+
+  .status[data-tone="warn"] .status-dot {
+    background: var(--danger);
+    box-shadow: 0 0 11px rgba(255, 137, 127, .8);
+  }
+
+  .board-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 18px;
+    flex-wrap: wrap;
+    margin: 13px 2px 18px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(7px, .65vw, 9px);
+    letter-spacing: .08em;
+    line-height: 1.5;
+  }
+
+  .face-key {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  .face-key-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: #c3d1e9;
+  }
+
+  .face-dot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-radius: 3px;
+  }
+
+  .face-dot--number {
+    background: #f1e6d0;
+    box-shadow: 0 0 8px rgba(241, 230, 208, .35);
+  }
+
+  .face-dot--action {
+    border: 1px solid rgba(124, 217, 255, .55);
+    background: #101a2c;
+    box-shadow: inset 0 0 6px rgba(124, 217, 255, .25);
+  }
+
+  .key-arrow {
+    color: rgba(146, 159, 189, .58);
+    font-size: .9em;
+  }
+
+  .key-rule {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding-left: 7px;
+    border-left: 1px solid var(--line);
+    color: rgba(146, 159, 189, .82);
+  }
+
+  .mobile-swipe { display: none; color: var(--gold); }
+
+  .draw-hint {
+    margin: 17px 0 0;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(7px, .64vw, 9px);
+    letter-spacing: .08em;
+    line-height: 1.5;
+    text-align: center;
+  }
+
+  .draw-hint .hint-mobile { display: none; }
+
+  .draw-hint kbd {
+    display: inline-block;
+    min-width: 20px;
+    margin: 0 2px;
+    padding: 1px 5px;
+    border: 1px solid rgba(165, 187, 235, .19);
+    border-radius: 4px;
+    background: rgba(4, 8, 16, .5);
+    color: #c5d2ea;
+    font-family: var(--font-mono);
+    font-size: .9em;
+    line-height: 1.4;
+  }
+
+  /* ---------- three paired lanes ---------- */
+  .lanes {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(10px, 1.55vw, 22px);
+    width: 100%;
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .lane {
+    --card-w: clamp(150px, 20vw, 250px);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+    animation: laneIn .55s cubic-bezier(.2, .75, .25, 1) both;
+  }
+
+  .lane:nth-child(2) { animation-delay: .05s; }
+  .lane:nth-child(3) { animation-delay: .1s; }
+
+  .lane-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 2px;
+  }
+
+  .lane-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .lane-code {
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 auto;
+    border: 1px solid rgba(var(--accent-rgb), .32);
+    border-radius: 8px;
+    color: var(--accent);
+    background: rgba(var(--accent-rgb), .055);
+    font-family: var(--font-mono);
+    font-size: .6rem;
+    letter-spacing: -.03em;
+  }
+
+  .lane-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .lane-title strong {
+    color: #dce7ff;
+    font-size: clamp(.73rem, .88vw, .9rem);
+    font-weight: 700;
+    letter-spacing: .08em;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .lane-title small {
+    overflow: hidden;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(5px, .5vw, 7px);
+    letter-spacing: .12em;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lane-count {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    flex: 0 0 auto;
+    padding-top: 1px;
+    line-height: 1;
+  }
+
+  .lane-count strong {
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: clamp(1.3rem, 2.1vw, 1.95rem);
+    font-weight: 500;
+    letter-spacing: -.08em;
+    line-height: .9;
+  }
+
+  .lane-count span {
+    color: var(--muted);
+    font-size: clamp(.5rem, .57vw, .62rem);
+  }
+
+  .lane-body {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    width: 100%;
+    padding: clamp(7px, 1vw, 12px);
+    border: 1px dashed transparent;
+    border-radius: 23px;
+    transition: border-color .3s ease, background .3s ease, box-shadow .3s ease;
+  }
+
+  .lane.has-pair .lane-body {
+    border-color: rgba(var(--accent-rgb), .3);
+    background:
+      linear-gradient(180deg, rgba(var(--accent-rgb), .055), transparent 57%),
+      rgba(3, 6, 13, .16);
+    box-shadow: inset 0 0 34px rgba(var(--accent-rgb), .025);
+  }
+
+  .lane-body::before {
+    content: "PAIR " attr(data-pair);
+    position: absolute;
+    z-index: 5;
+    top: -1px;
+    left: 50%;
+    padding: 2px 8px;
+    border: 1px solid rgba(var(--accent-rgb), .3);
+    border-radius: 999px;
+    background: #08101e;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: clamp(5px, .48vw, 7px);
+    letter-spacing: .12em;
+    line-height: 1.3;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    transition: opacity .3s ease;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .lane.has-pair .lane-body::before { opacity: .9; }
+
+  .draw-slot,
+  .action-slot {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .action-slot { perspective: 1100px; }
+
+  .draw-stack {
+    position: relative;
+    width: var(--card-w);
+    padding-bottom: 7px;
+    margin-inline: auto;
+  }
+
+  .draw-layer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    aspect-ratio: 5 / 7;
+    border: 1px solid rgba(var(--accent-rgb), .14);
+    border-radius: calc(var(--card-w) * .07);
+    background: linear-gradient(150deg, #151d2f, #060910);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, .3);
+    transition: opacity .25s ease, visibility .25s ease;
+    pointer-events: none;
+  }
+
+  .draw-layer--1 { transform: translate(5px, 5px) rotate(1.3deg); opacity: .7; z-index: 1; }
+  .draw-layer--2 { transform: translate(10px, 10px) rotate(2.7deg); opacity: .42; z-index: 0; }
+
+  .lane[data-depth="1"] .draw-layer--1,
+  .lane[data-depth="1"] .draw-layer--2,
+  .lane[data-depth="2"] .draw-layer--2 {
+    opacity: 0;
+    visibility: hidden;
+  }
+
+  .draw-stack .card-shell {
+    position: relative;
+    z-index: 2;
+    width: var(--card-w);
+  }
+
+  .pair-connector {
+    display: none;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 30px;
+  }
+
+  .lane.has-pair .pair-connector { display: flex; }
+
+  .pair-connector::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: repeating-linear-gradient(to bottom, rgba(var(--accent-rgb), .42) 0 3px, transparent 3px 7px);
+  }
+
+  .pair-connector span {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 19px;
+    height: 19px;
+    border: 1px solid rgba(var(--accent-rgb), .35);
+    border-radius: 50%;
+    background: #080f1d;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 9px;
+    line-height: 1;
+    box-shadow: 0 0 12px rgba(var(--accent-rgb), .08);
+  }
+
+  .lane:not(.has-pair) .action-slot { display: none; }
+
+  .action-card-button {
+    display: block;
+    width: var(--card-w);
+    margin-inline: auto;
+    padding: 0;
+    border: 0;
+    border-radius: calc(var(--card-w) * .071);
+    background: transparent;
+    color: inherit;
+    cursor: zoom-in;
+    text-align: left;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .action-card-button.is-new {
+    animation: actionDeal .66s cubic-bezier(.18, .8, .24, 1) both;
+    animation-delay: calc(var(--lane-index, 0) * 70ms);
+  }
+
+  .lane-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-height: 16px;
+    padding: 0 4px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(6px, .58vw, 8px);
+    letter-spacing: .06em;
+    line-height: 1.4;
+  }
+
+  .lane-discard strong {
+    color: #c4d1e8;
+    font-weight: 500;
+  }
+
+  .lane-note {
+    overflow: hidden;
+    color: rgba(146, 159, 189, .8);
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .lane.is-recycled .lane-note {
+    color: var(--gold);
+    text-shadow: 0 0 14px rgba(242, 207, 122, .22);
+  }
+
+  /* ---------- card frame ---------- */
+  .card-shell {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 5 / 7;
+    overflow: hidden;
+    padding: calc(var(--card-w) * .022);
+    border-radius: calc(var(--card-w) * .071);
+    box-shadow: 0 22px 42px rgba(0, 0, 0, .42), inset 0 0 0 1px rgba(255, 255, 255, .22);
+    isolation: isolate;
+  }
+
+  .card-shell--number {
+    background:
+      linear-gradient(142deg, #f3e9d2 0%, #7f899c 11%, #2a3041 27%, #d8d2c2 49%, #4a5265 69%, #11151f 84%, #a9adba 100%);
+  }
+
+  .card-shell--action {
+    background:
+      linear-gradient(142deg, #d8c9ad 0%, #6f7a8e 10%, #1b2233 29%, #697386 48%, #11151f 67%, #c4b9a1 88%, #424b5e 100%);
+    box-shadow:
+      0 24px 46px rgba(0, 0, 0, .48),
+      0 0 38px rgba(var(--accent-rgb), .07),
+      inset 0 0 0 1px rgba(255, 255, 255, .2);
+  }
+
+  .action-card-button:hover .card-shell {
+    transform: translateY(-5px);
+    filter: brightness(1.035);
+    box-shadow: 0 30px 54px rgba(0, 0, 0, .5), 0 0 30px rgba(var(--accent-rgb), .12);
+  }
+
+  .action-card-button:active .card-shell {
+    transform: translateY(-2px) scale(.996);
+  }
+
+  .card-shell,
+  .action-card-button {
+    transition: transform .25s ease, box-shadow .25s ease, filter .25s ease;
+  }
+
+  .card-paper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding: calc(var(--card-w) * .026) calc(var(--card-w) * .052) calc(var(--card-w) * .047);
+    border-radius: calc(var(--card-w) * .054);
+  }
+
+  .card-paper--number {
+    --paper-line: rgba(20, 24, 36, .5);
+    color: #121724;
+    background-color: #f4ecd9;
+    background-image:
+      radial-gradient(circle at 23% 12%, rgba(255, 255, 255, .85), transparent 37%),
+      linear-gradient(116deg, rgba(255, 255, 255, .35), transparent 29% 68%, rgba(151, 129, 82, .09)),
+      repeating-linear-gradient(0deg, rgba(35, 38, 50, .022) 0 1px, transparent 1px 4px);
+    box-shadow:
+      inset 0 0 0 1px rgba(20, 24, 36, .5),
+      inset 0 0 36px rgba(133, 109, 65, .14);
+  }
+
+  .card-paper--action {
+    --paper-line: rgba(222, 235, 255, .1);
+    color: #f2f6ff;
+    background:
+      radial-gradient(circle at 50% 32%, rgba(var(--accent-rgb), .23), transparent 55%),
+      radial-gradient(circle at 18% 8%, rgba(255, 255, 255, .07), transparent 30%),
+      linear-gradient(158deg, #152138 0%, #090f1d 60%, #050810 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(var(--accent-rgb), .22),
+      inset 0 0 50px rgba(0, 0, 0, .32);
+  }
+
+  .card-paper::before {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    top: 12%;
+    bottom: 12%;
+    left: 0;
+    width: calc(var(--card-w) * .011);
+    min-width: 2px;
+    background: var(--accent);
+    box-shadow: 0 0 16px rgba(var(--accent-rgb), .4);
+    opacity: .9;
+  }
+
+  .card-paper::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    inset: calc(var(--card-w) * .018);
+    border: 1px solid var(--paper-line, rgba(20, 24, 36, .1));
+    border-radius: calc(var(--card-w) * .04);
+    pointer-events: none;
+  }
+
+  .card-shine {
+    position: absolute;
+    z-index: 5;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 18%, rgba(255, 255, 255, .2) 34%, transparent 49%);
+    transform: translateX(-125%);
+    transition: transform .85s ease;
+    pointer-events: none;
+  }
+
+  .action-card-button:hover .card-shine { transform: translateX(125%); }
+
+  /* ---------- image-based action glyphs ---------- */
+  .action-glyph {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    line-height: 1;
+    vertical-align: middle;
+  }
+
+  .action-glyph-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
+    border-radius: 16%;
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+
+  .action-glyph-fallback {
+    display: inline-block;
+    font-size: 30px;
+    line-height: 1;
+  }
+
+  .action-glyph-fallback[hidden] { display: none; }
+
+  .corner-chip .action-glyph {
+    width: 82%;
+    height: 82%;
+  }
+
+  .corner-chip .action-glyph-fallback { font-size: calc(var(--card-w) * .06); }
+
+  .big-action-icon.action-glyph {
+    width: calc(var(--card-w) * .34);
+    height: calc(var(--card-w) * .34);
+  }
+
+  .big-action-icon .action-glyph-fallback { font-size: calc(var(--card-w) * .25); }
+
+  .watermark-glyph {
+    width: 100%;
+    height: 100%;
+  }
+
+  .watermark-glyph .action-glyph-fallback { font-size: calc(var(--card-w) * .38); }
+
+  .legend .action-glyph {
+    width: 13px;
+    height: 13px;
+    margin-right: 2px;
+    vertical-align: -2px;
+  }
+
+  .legend .action-glyph-fallback { font-size: 10px; }
+
+  /* ---------- number face ---------- */
+  .corner-chip {
+    position: absolute;
+    z-index: 4;
+    top: calc(var(--card-w) * .032);
+    display: grid;
+    place-items: center;
+    width: calc(var(--card-w) * .12);
+    aspect-ratio: 1;
+    border: 1px solid rgba(var(--accent-rgb), .72);
+    border-radius: calc(var(--card-w) * .033);
+    background: linear-gradient(145deg, #1a2337, #070b16);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, .28), inset 0 0 0 1px rgba(255, 255, 255, .045);
+    font-size: calc(var(--card-w) * .063);
+    line-height: 1;
+  }
+
+  .corner-chip--left { left: calc(var(--card-w) * .032); }
+  .corner-chip--right { right: calc(var(--card-w) * .032); }
+
+  .card-topline {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .55em;
+    width: 58%;
+    height: calc(var(--card-w) * .125);
+    margin: 0 auto;
+    color: #716754;
+    font-family: var(--font-mono);
+    font-size: clamp(6px, calc(var(--card-w) * .033), 14px);
+    letter-spacing: .1em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .card-paper--action .card-topline {
+    width: 100%;
+    color: rgba(221, 234, 255, .54);
+  }
+
+  .topline-sep {
+    width: calc(var(--card-w) * .027);
+    height: 1px;
+    flex: 0 0 auto;
+    background: currentColor;
+    opacity: .38;
+  }
+
+  .number-stage {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  .number-stage::before {
+    content: "";
+    position: absolute;
+    width: 68%;
+    aspect-ratio: 1;
+    border: 1px solid rgba(20, 24, 35, .09);
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 10px rgba(255, 255, 255, .015);
+  }
+
+  .number-stage::after {
+    content: "";
+    position: absolute;
+    width: 76%;
+    bottom: 1%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(28, 32, 45, .18), transparent);
+  }
+
+  .number-watermark {
+    position: absolute;
+    z-index: 0;
+    width: calc(var(--card-w) * .58);
+    height: calc(var(--card-w) * .58);
+    color: var(--accent);
+    line-height: 1;
+    opacity: .085;
+    filter: grayscale(1) contrast(1.2);
+    transform: rotate(-12deg);
+    pointer-events: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .big-number {
+    position: relative;
+    z-index: 1;
+    padding-right: .04em;
+    color: #121724;
+    font-family: var(--font-number);
+    font-size: calc(var(--card-w) * .48);
+    font-weight: 700;
+    line-height: .83;
+    letter-spacing: -.085em;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .7), 0 13px 22px rgba(62, 47, 22, .16);
+  }
+
+  .number-caption {
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    color: rgba(38, 39, 46, .44);
+    font-family: var(--font-mono);
+    font-size: clamp(5px, calc(var(--card-w) * .024), 10px);
+    letter-spacing: .17em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* ---------- action face ---------- */
+  .face-rune {
+    position: absolute;
+    z-index: 4;
+    top: calc(var(--card-w) * .048);
+    color: rgba(var(--accent-rgb), .72);
+    font-size: calc(var(--card-w) * .05);
+    line-height: 1;
+    text-shadow: 0 0 12px rgba(var(--accent-rgb), .35);
+  }
+
+  .face-rune--left { left: calc(var(--card-w) * .045); }
+  .face-rune--right { right: calc(var(--card-w) * .045); }
+
+  .action-stage {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: calc(var(--card-w) * .03) 0 0;
+  }
+
+  .action-stage::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 73%;
+    aspect-ratio: 1;
+    border: 1px solid rgba(var(--accent-rgb), .22);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow:
+      inset 0 0 0 10px rgba(255, 255, 255, .014),
+      0 0 30px rgba(var(--accent-rgb), .055);
+  }
+
+  .action-stage::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 88%;
+    aspect-ratio: 1;
+    border: 1px dashed rgba(var(--accent-rgb), .15);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .big-action-icon {
+    position: relative;
+    z-index: 2;
+    line-height: 1;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, .45));
+  }
+
+  .big-action-name {
+    position: relative;
+    z-index: 2;
+    margin-top: calc(var(--card-w) * .028);
+    color: #fffaf0;
+    font-size: clamp(11px, calc(var(--card-w) * .066), 22px);
+    font-weight: 700;
+    letter-spacing: .12em;
+    line-height: 1.15;
+    text-shadow: 0 0 20px rgba(var(--accent-rgb), .22);
+    white-space: nowrap;
+  }
+
+  .big-action-en {
+    position: relative;
+    z-index: 2;
+    margin-top: calc(var(--card-w) * .014);
+    color: rgba(var(--accent-rgb), .8);
+    font-family: var(--font-mono);
+    font-size: clamp(5px, calc(var(--card-w) * .025), 10px);
+    letter-spacing: .19em;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .face-band {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: calc(var(--card-w) * .022);
+    width: 100%;
+    min-height: calc(var(--card-w) * .132);
+    overflow: hidden;
+    padding: 0 calc(var(--card-w) * .04);
+    border: 1px solid rgba(var(--accent-rgb), .32);
+    border-radius: calc(var(--card-w) * .043);
+    background:
+      linear-gradient(100deg, rgba(var(--accent-rgb), .16), transparent 56%),
+      linear-gradient(160deg, #141c2e, #070a12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 8px 18px rgba(14, 11, 5, .2);
+  }
+
+  .face-band::before {
+    content: "";
+    position: absolute;
+    top: 15%;
+    bottom: 15%;
+    left: 0;
+    width: 2px;
+    background: var(--accent);
+  }
+
+  .face-band--action {
+    background:
+      linear-gradient(100deg, rgba(var(--accent-rgb), .24), transparent 62%),
+      rgba(4, 8, 15, .74);
+  }
+
+  .band-kicker {
+    color: rgba(232, 240, 255, .49);
+    font-family: var(--font-mono);
+    font-size: clamp(4px, calc(var(--card-w) * .021), 8px);
+    letter-spacing: .12em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .band-title {
+    color: #f8f3e8;
+    font-size: clamp(8px, calc(var(--card-w) * .046), 15px);
+    font-weight: 700;
+    letter-spacing: .08em;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+
+  .band-end {
+    margin-left: auto;
+    overflow: hidden;
+    color: rgba(232, 240, 255, .36);
+    font-family: var(--font-mono);
+    font-size: clamp(4px, calc(var(--card-w) * .02), 8px);
+    letter-spacing: .08em;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* ---------- empty faces ---------- */
+  .empty-face {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: var(--card-w);
+    aspect-ratio: 5 / 7;
+    margin-inline: auto;
+    overflow: hidden;
+    border: 1px dashed rgba(var(--accent-rgb), .3);
+    border-radius: calc(var(--card-w) * .06);
+    background:
+      radial-gradient(circle at 50% 42%, rgba(var(--accent-rgb), .055), transparent 50%),
+      rgba(5, 8, 17, .48);
+    text-align: center;
+  }
+
+  .empty-face .empty-symbol {
+    color: rgba(var(--accent-rgb), .72);
+    font-family: var(--font-mono);
+    font-size: calc(var(--card-w) * .15);
+    line-height: 1;
+  }
+
+  .empty-face strong {
+    color: #e3cbab;
+    font-size: clamp(9px, calc(var(--card-w) * .042), 14px);
+    font-weight: 600;
+    letter-spacing: .08em;
+  }
+
+  .empty-face small {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(5px, calc(var(--card-w) * .021), 8px);
+    letter-spacing: .12em;
+  }
+
+  /* ---------- level bar & mission objectives ---------- */
+  .level-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px 24px;
+    flex-wrap: wrap;
+    padding: clamp(12px, 1.5vw, 17px) clamp(13px, 1.8vw, 20px);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background:
+      linear-gradient(180deg, rgba(16, 25, 47, .74), rgba(6, 10, 20, .66));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+  }
+
+  .level-left {
+    display: flex;
+    align-items: center;
+    gap: 9px 12px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
+  .level-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(7px, .58vw, 9px);
+    letter-spacing: .16em;
+    line-height: 1;
+  }
+
+  .level-label::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 10px rgba(242, 207, 122, .55);
+  }
+
+  .level-select-wrap { position: relative; }
+
+  .level-select-wrap::after {
+    content: "⌄";
+    position: absolute;
+    top: 50%;
+    right: 13px;
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1;
+    transform: translateY(-58%);
+    pointer-events: none;
+  }
+
+  .level-select {
+    appearance: none;
+    -webkit-appearance: none;
+    min-width: 168px;
+    height: 40px;
+    padding: 0 38px 0 13px;
+    border: 1px solid rgba(242, 207, 122, .28);
+    border-radius: 10px;
+    outline: none;
+    background: linear-gradient(180deg, rgba(30, 40, 62, .92), rgba(9, 14, 27, .95));
+    color: #f6f1e4;
+    font-family: var(--font-sans);
+    font-size: .8rem;
+    font-weight: 600;
+    letter-spacing: .05em;
+    cursor: pointer;
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+
+  .level-select:hover { border-color: rgba(242, 207, 122, .48); }
+  .level-select:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .level-select option { background: #0a1020; color: #eef2ff; }
+
+  .level-hint {
+    overflow: hidden;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(6px, .56vw, 8px);
+    letter-spacing: .05em;
+    line-height: 1.45;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .run-summary {
+    display: flex;
+    align-items: stretch;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  .run-stat {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 74px;
+    padding: 7px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: rgba(4, 8, 17, .38);
+  }
+
+  .run-stat span {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(6px, .5vw, 8px);
+    letter-spacing: .11em;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .run-stat strong {
+    margin-top: 2px;
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: clamp(.96rem, 1.3vw, 1.15rem);
+    font-weight: 500;
+    letter-spacing: -.04em;
+    line-height: 1;
+  }
+
+  .run-stat small {
+    margin-left: 2px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: .52rem;
+    font-weight: 400;
+  }
+
+  .run-stat--complete strong { color: var(--cyan); }
+  .run-stat--claimed strong { color: var(--mint); }
+
+  .mini-btn {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 30px;
+    padding: 4px 10px;
+    border: 1px solid rgba(163, 184, 235, .18);
+    border-radius: 8px;
+    background: rgba(10, 16, 31, .62);
+    color: #c6d3eb;
+    font-family: var(--font-mono);
+    font-size: clamp(7px, .65vw, 9px);
+    letter-spacing: .04em;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: border-color .2s ease, background .2s ease, color .2s ease, opacity .2s ease;
+  }
+
+  .mini-btn:hover:not(:disabled) {
+    border-color: rgba(242, 207, 122, .42);
+    background: rgba(242, 207, 122, .08);
+    color: #fff5da;
+  }
+
+  .mini-btn:disabled { opacity: .32; cursor: not-allowed; }
+  .mini-btn.is-armed {
+    border-color: rgba(255, 137, 127, .58);
+    background: rgba(255, 137, 127, .09);
+    color: #ffc1bb;
+  }
+
+  .mission-zone {
+    position: relative;
+    padding: clamp(15px, 1.9vw, 23px) clamp(12px, 2vw, 24px);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background:
+      radial-gradient(circle at 16% 0%, rgba(78, 100, 156, .12), transparent 40%),
+      linear-gradient(180deg, rgba(11, 18, 35, .86), rgba(5, 8, 18, .78));
+    box-shadow: 0 24px 65px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255, 255, 255, .035);
+    animation: riseIn .7s .05s cubic-bezier(.2, .75, .25, 1) both;
+  }
+
+  .mission-zone::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 8%;
+    right: 8%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(124, 217, 255, .48), transparent);
+    pointer-events: none;
+  }
+
+  .mission-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 18px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .mission-head h2 {
+    margin: 0;
+    color: #eaf0ff;
+    font-size: clamp(1.04rem, 1.5vw, 1.32rem);
+    font-weight: 700;
+    letter-spacing: .08em;
+    line-height: 1.2;
+  }
+
+  .mission-rule {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(6px, .58vw, 8px);
+    letter-spacing: .04em;
+    line-height: 1.5;
+  }
+
+  .mission-mobile-hint {
+    display: none;
+    margin: 0 0 7px;
+    padding: 0 14px;
+    color: rgba(242, 207, 122, .8);
+    font-family: var(--font-mono);
+    font-size: 7px;
+    letter-spacing: .04em;
+    line-height: 1.4;
+  }
+
+  .mission-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .missions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(10px, 1.45vw, 18px);
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+
+  .mission-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 218px;
+    padding: 18px;
+    border: 1px dashed rgba(163, 184, 235, .16);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 50% 36%, rgba(103, 137, 201, .06), transparent 44%),
+      rgba(4, 8, 17, .32);
+    text-align: center;
+  }
+
+  .mission-placeholder b {
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 1.15rem;
+    font-weight: 500;
+    letter-spacing: .1em;
+  }
+
+  .mission-placeholder strong {
+    color: #c6d4ec;
+    font-size: clamp(.72rem, .85vw, .86rem);
+    font-weight: 600;
+    letter-spacing: .08em;
+  }
+
+  .mission-placeholder small {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(5px, .5vw, 7px);
+    letter-spacing: .1em;
+  }
+
+  .mission-card {
+    --mission-accent: var(--gold);
+    --mission-rgb: 242, 207, 122;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    width: 100%;
+    min-width: 0;
+    padding: clamp(9px, 1.05vw, 13px);
+    overflow: hidden;
+    border: 1px solid rgba(var(--mission-rgb), .2);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 14% 0%, rgba(var(--mission-rgb), .08), transparent 35%),
+      linear-gradient(160deg, rgba(17, 26, 48, .94), rgba(5, 9, 19, .96));
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    transition: transform .24s ease, border-color .24s ease, box-shadow .24s ease, background .24s ease;
+  }
+
+  .mission-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(var(--mission-rgb), .46);
+    box-shadow: 0 18px 38px rgba(0, 0, 0, .28), 0 0 24px rgba(var(--mission-rgb), .07);
+  }
+
+  .mission-card:active { transform: translateY(-1px); }
+
+  .mission-card.is-claimed {
+    border-color: rgba(var(--mission-rgb), .55);
+    background:
+      radial-gradient(circle at 14% 0%, rgba(var(--mission-rgb), .16), transparent 38%),
+      linear-gradient(160deg, rgba(27, 32, 45, .96), rgba(8, 10, 17, .97));
+    box-shadow: 0 18px 40px rgba(0, 0, 0, .25), inset 0 0 38px rgba(var(--mission-rgb), .045);
+  }
+
+  .mission-card.is-hit { animation: missionHit .46s ease; }
+  .mission-card.just-claimed { animation: missionClaim .68s cubic-bezier(.2, .8, .25, 1); }
+
+  .mission-card-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .mission-group-badge {
+    display: grid;
+    place-items: center;
+    width: 27px;
+    height: 27px;
+    flex: 0 0 auto;
+    border: 1px solid rgba(var(--mission-rgb), .46);
+    border-radius: 8px;
+    background: rgba(var(--mission-rgb), .08);
+    color: var(--mission-accent);
+    font-family: var(--font-mono);
+    font-size: .72rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .mission-code {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .mission-code strong {
+    color: #e4ecff;
+    font-family: var(--font-mono);
+    font-size: clamp(.68rem, .8vw, .82rem);
+    font-weight: 500;
+    letter-spacing: .05em;
+    line-height: 1.15;
+  }
+
+  .mission-code small {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(5px, .48vw, 7px);
+    letter-spacing: .1em;
+    line-height: 1.15;
+  }
+
+  .mission-state {
+    margin-left: auto;
+    overflow: hidden;
+    color: rgba(146, 159, 189, .82);
+    font-family: var(--font-mono);
+    font-size: clamp(6px, .58vw, 8px);
+    letter-spacing: .04em;
+    line-height: 1.3;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .mission-card.is-claimed .mission-state { color: var(--mission-accent); }
+
+  .mission-art {
+    position: relative;
+    display: grid;
+    place-items: center;
+    min-height: clamp(88px, 8.2vw, 108px);
+    padding: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(var(--mission-rgb), .25);
+    border-radius: 13px;
+    background:
+      radial-gradient(circle at 48% 42%, rgba(255, 255, 255, .9), transparent 48%),
+      linear-gradient(150deg, #f4eddd, #e7dcc5);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .4);
+  }
+
+  .mission-art::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border: 1px dashed rgba(var(--mission-rgb), .18);
+    border-radius: 9px;
+    pointer-events: none;
+  }
+
+  .mission-art img {
+    position: relative;
+    z-index: 1;
+    width: min(54%, 132px);
+    max-height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 7px 12px rgba(67, 51, 28, .18));
+    -webkit-user-drag: none;
+  }
+
+  .mission-card.is-claimed .mission-art {
+    background:
+      radial-gradient(circle at 48% 42%, rgba(255, 255, 255, .94), transparent 48%),
+      linear-gradient(150deg, #f7efdf, #eadfc8);
+  }
+
+  .mission-score-row {
+    display: grid;
+    grid-template-columns: 1.16fr 1fr;
+    gap: 7px;
+  }
+
+  .score-tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 55px;
+    padding: 6px 9px;
+    overflow: hidden;
+    border-radius: 10px;
+  }
+
+  .score-tile--high {
+    border: 1px solid rgba(32, 30, 25, .16);
+    background: linear-gradient(150deg, #f5eddb, #e9dcc4);
+    color: #182034;
+  }
+
+  .score-tile--low {
+    border: 1px solid rgba(163, 184, 235, .14);
+    background: rgba(255, 255, 255, .045);
+    color: #e8efff;
+    transition: border-color .2s ease, background .2s ease;
+  }
+
+  .mission-card.is-claimed .score-tile--low {
+    border-color: rgba(var(--mission-rgb), .5);
+    background: rgba(var(--mission-rgb), .1);
+  }
+
+  .score-label {
+    color: rgba(35, 39, 51, .6);
+    font-family: var(--font-mono);
+    font-size: clamp(7px, .55vw, 9px);
+    letter-spacing: .08em;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .score-tile--low .score-label { color: rgba(205, 219, 245, .54); }
+
+  .score-value {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: clamp(1.22rem, 1.8vw, 1.5rem);
+    font-weight: 500;
+    letter-spacing: -.06em;
+    line-height: 1;
+    transition: opacity .2s ease;
+  }
+
+  .score-value small {
+    font-size: .46em;
+    font-weight: 400;
+    letter-spacing: 0;
+    opacity: .55;
+  }
+
+  .score-tile--low .score-value { color: var(--mission-accent); }
+
+  .mission-card.is-claimed .score-tile--high .score-value { opacity: .08; }
+
+  .accomplished-stamp {
+    position: absolute;
+    z-index: 2;
+    inset: 2px;
+    width: calc(100% - 4px);
+    height: calc(100% - 4px);
+    object-fit: contain;
+    opacity: 0;
+    transform: rotate(-7deg) scale(1.25);
+    transition: opacity .28s ease, transform .36s cubic-bezier(.2, .85, .3, 1.1);
+    pointer-events: none;
+    -webkit-user-drag: none;
+  }
+
+  .mission-card.is-claimed .accomplished-stamp {
+    opacity: 1;
+    transform: rotate(-7deg) scale(1);
+  }
+
+  .mission-card-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+    padding-top: 7px;
+    border-top: 1px dashed rgba(163, 184, 235, .13);
+  }
+
+  .mission-current {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+
+  .mission-current-label {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(6px, .55vw, 8px);
+    letter-spacing: .1em;
+    line-height: 1.2;
+  }
+
+  .mission-current strong {
+    color: var(--mission-accent);
+    font-family: var(--font-mono);
+    font-size: clamp(1.26rem, 1.85vw, 1.55rem);
+    font-weight: 500;
+    letter-spacing: -.05em;
+    line-height: 1;
+  }
+
+  .mission-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(6px, .56vw, 8px);
+    letter-spacing: .04em;
+    line-height: 1.35;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .mission-meta b {
+    color: #d4dff3;
+    font-weight: 500;
+  }
+
+  .mission-next {
+    color: rgba(242, 207, 122, .78);
+  }
+
+  .score-pop {
+    position: absolute;
+    z-index: 6;
+    right: 14px;
+    top: 62px;
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 1.7vw, 1.45rem);
+    font-weight: 600;
+    letter-spacing: -.04em;
+    opacity: 0;
+    pointer-events: none;
+    text-shadow: 0 0 18px rgba(242, 207, 122, .4);
+  }
+
+  .score-pop.is-active { animation: scorePop .8s ease-out both; }
+
+  /* ---------- compact two-column game layout ---------- */
+  .level-bar {
+    justify-content: flex-start;
+    padding: 9px 12px;
+    border-radius: 14px;
+  }
+
+  .level-left { gap: 8px 10px; }
+  .level-select { height: 36px; min-width: 156px; }
+  .level-hint { font-size: 7px; }
+
+  .header-level-select {
+    display: flex;
+    flex: 0 0 auto;
+    align-self: stretch;
+  }
+
+  .controls .level-select {
+    height: 57px;
+    min-width: 176px;
+    border-radius: 15px;
+    font-size: .82rem;
+  }
+
+  .flip-bar {
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    padding: 4px 10px;
+  }
+
+  .flip-bar #flip {
+    min-width: 190px;
+    min-height: 46px;
+    justify-content: center;
+  }
+
+  .flip-bar #undo-flip {
+    min-width: 112px;
+    min-height: 46px;
+    align-self: stretch;
+    justify-content: center;
+  }
+
+  .flip-bar .level-hint {
+    padding-right: 4px;
+  }
+
+  .board-head { gap: 10px; }
+  .board-head h2 { font-size: clamp(1rem, 1.35vw, 1.22rem); }
+  .board-head .section-kicker { margin-bottom: 3px; }
+  .status { padding: 5px 9px; font-size: clamp(.62rem, .68vw, .72rem); }
+  .board-meta { margin: 8px 2px 10px; }
+  .draw-hint { margin-top: 9px; }
+  .lanes { gap: clamp(7px, 1vw, 13px); }
+
+  .lane {
+    --card-w: clamp(100px, min(13vw, 20vh), 185px);
+    gap: 6px;
+  }
+
+  .lane-head { padding: 0 1px; }
+  .lane-code { width: 21px; height: 21px; font-size: .54rem; }
+  .lane-title strong { font-size: clamp(.66rem, .78vw, .79rem); }
+  .lane-title small { font-size: 6px; }
+  .lane-count strong { font-size: clamp(1.1rem, 1.6vw, 1.55rem); }
+  .lane-count span { font-size: .52rem; }
+  .lane-body { padding: 6px; border-radius: 18px; }
+  .pair-connector { height: 20px; }
+  .pair-connector span { width: 17px; height: 17px; font-size: 8px; }
+  .lane-foot { font-size: 6px; min-height: 12px; }
+
+  .mission-zone {
+    position: sticky;
+    top: 12px;
+    align-self: stretch;
+    width: 100%;
+    height: 100%;
+    max-height: calc(100svh - 24px);
+    overflow-y: auto;
+    padding: clamp(10px, 1.1vw, 14px);
+    border-radius: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(138, 161, 211, .3) transparent;
+  }
+
+  .mission-zone::-webkit-scrollbar { width: 4px; }
+  .mission-zone::-webkit-scrollbar-track { background: transparent; }
+  .mission-zone::-webkit-scrollbar-thumb { border-radius: 99px; background: rgba(138, 161, 211, .3); }
+
+  .mission-head {
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 6px 10px;
+    margin-bottom: 4px;
+  }
+
+  .mission-head > div {
+    min-width: 0;
+  }
+
+  .mission-head .mini-btn {
+    flex: 0 0 auto;
+  }
+
+  .mission-head h2 { font-size: clamp(.96rem, 1.2vw, 1.12rem); }
+  .mission-head .section-kicker { margin-bottom: 3px; }
+  .mission-head .section-kicker {
+    white-space: nowrap;
+    letter-spacing: .1em;
+  }
+
+  .mini-btn--reset {
+    border-color: rgba(255, 155, 136, .25);
+    color: #ffc7bd;
+    background: rgba(255, 137, 127, .045);
+  }
+
+  .mini-btn--reset:hover:not(:disabled) {
+    border-color: rgba(255, 155, 136, .55);
+    background: rgba(255, 137, 127, .1);
+    color: #ffe1dc;
+  }
+
+  .mission-rule {
+    margin: 3px 0 8px;
+    font-size: 6.5px;
+    line-height: 1.45;
+  }
+
+  .mission-summary {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 9px;
+  }
+
+  .mission-stat {
+    display: flex;
+    align-items: baseline;
+    gap: 3px;
+    padding: 6px 8px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: rgba(4, 8, 17, .38);
+  }
+
+  .mission-stat span {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 6px;
+    letter-spacing: .08em;
+    white-space: nowrap;
+  }
+
+  .mission-stat strong {
+    margin-left: auto;
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    font-weight: 500;
+    letter-spacing: -.04em;
+    line-height: 1;
+  }
+
+  .mission-stat:nth-child(2) strong { color: var(--cyan); }
+
+  .mission-stat small {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: .5rem;
+    font-weight: 400;
+  }
+
+  .missions {
+    grid-template-columns: 1fr;
+    gap: 7px;
+    max-width: none;
+    margin: 0;
+  }
+
+  .mission-placeholder {
+    min-height: 78px;
+    padding: 10px;
+    border-radius: 12px;
+    gap: 3px;
+  }
+
+  .mission-placeholder b { font-size: .9rem; }
+  .mission-placeholder strong { font-size: .7rem; }
+  .mission-placeholder small { font-size: 5.5px; }
+
+  .mission-card {
+    gap: 5px;
+    padding: 8px 9px;
+    border-radius: 13px;
+  }
+
+  .mission-card:hover { transform: translateY(-2px); }
+
+  .mission-card:disabled {
+    opacity: 1;
+    cursor: default;
+    transform: none;
+  }
+
+  .mission-card:disabled:hover {
+    transform: none;
+    border-color: rgba(var(--mission-rgb), .55);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .2), inset 0 0 28px rgba(var(--mission-rgb), .04);
+  }
+
+  .mission-card-top { gap: 6px; }
+
+  .mission-group-badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    font-size: .6rem;
+  }
+
+  .mission-code strong { font-size: .7rem; }
+  .mission-code small { font-size: 5px; }
+  .mission-state { font-size: 6px; }
+
+  .mission-card-body {
+    display: grid;
+    grid-template-columns: clamp(58px, 5.5vw, 82px) minmax(0, 1fr);
+    gap: 6px;
+    align-items: stretch;
+  }
+
+  .mission-card-body .mission-score-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .mission-card-body .score-tile {
+    min-height: 62px;
+    padding: 5px 7px;
+    border-radius: 9px;
+  }
+
+  .mission-card-body .score-label {
+    font-size: 6.5px;
+    letter-spacing: .06em;
+  }
+
+  .mission-card-body .score-value {
+    font-size: clamp(1.02rem, 1.5vw, 1.35rem);
+  }
+
+  .mission-art {
+    width: auto;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 85 / 70;
+    padding: 4px;
+    border-radius: 9px;
+  }
+
+  .mission-art::before { inset: 2px; border-radius: 6px; }
+
+  .mission-art img {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    filter: drop-shadow(0 4px 7px rgba(67, 51, 28, .16));
+  }
+
+  .mission-score-panel {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 62px;
+    padding: 5px 8px;
+    overflow: hidden;
+    border: 1px solid rgba(32, 30, 25, .16);
+    border-radius: 9px;
+    background: linear-gradient(150deg, #f5eddb, #e9dcc4);
+    color: #182034;
+  }
+
+  .mission-score-label {
+    color: rgba(35, 39, 51, .6);
+    font-family: var(--font-mono);
+    font-size: 6px;
+    letter-spacing: .08em;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .mission-score-value {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    margin-top: 2px;
+    font-family: var(--font-mono);
+    font-size: clamp(1.2rem, 1.75vw, 1.55rem);
+    font-weight: 500;
+    letter-spacing: -.06em;
+    line-height: 1;
+    transition: opacity .2s ease;
+  }
+
+  .mission-score-value small {
+    font-size: .45em;
+    font-weight: 400;
+    letter-spacing: 0;
+    opacity: .55;
+  }
+
+  .mission-score-panel .accomplished-stamp {
+    inset: 1px;
+    width: calc(100% - 2px);
+    height: calc(100% - 2px);
+  }
+
+  .mission-card.is-claimed .mission-score-value { opacity: .08; }
+
+  .mission-card-footer {
+    align-items: center;
+    padding-top: 4px;
+  }
+
+  .mission-current {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 4px;
+  }
+
+  .mission-current-label { font-size: 6px; }
+  .mission-current strong { font-size: 1.08rem; }
+
+  .mission-next {
+    font-size: 6.5px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .mission-card.is-claimed .mission-next { color: rgba(146, 159, 189, .66); }
+
+  .mission-description {
+    display: block;
+    padding-top: 4px;
+    border-top: 1px dashed rgba(163, 184, 235, .13);
+    color: rgba(173, 188, 214, .86);
+    font-family: var(--font-sans);
+    font-size: 9px;
+    line-height: 1.55;
+    letter-spacing: .02em;
+    overflow-wrap: anywhere;
+  }
+
+  .mission-description:empty { display: none; }
+
+  .score-pop {
+    top: 36px;
+    right: 10px;
+    font-size: 1.1rem;
+  }
+
+  .score-pop.is-negative {
+    color: var(--danger);
+    text-shadow: 0 0 18px rgba(255, 137, 127, .4);
+  }
+
+  /* ---------- mission picker modal ---------- */
+  .mission-picker {
+    position: fixed;
+    inset: 0;
+    z-index: 120;
+    display: grid;
+    place-items: center;
+    padding: clamp(10px, 3vw, 30px);
+  }
+
+  .mission-picker[hidden] { display: none; }
+
+  .mission-picker-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 4, 10, .84);
+    -webkit-backdrop-filter: blur(17px);
+    backdrop-filter: blur(17px);
+    opacity: 0;
+    transition: opacity .22s ease;
+  }
+
+  .mission-picker.is-open .mission-picker-scrim { opacity: 1; }
+
+  .mission-sheet {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: min(1080px, 100%);
+    max-height: calc(100svh - clamp(20px, 6vw, 60px));
+    overflow: hidden;
+    border: 1px solid rgba(158, 181, 235, .22);
+    border-radius: 27px;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(78, 100, 156, .16), transparent 40%),
+      linear-gradient(180deg, rgba(13, 21, 41, .98), rgba(5, 8, 18, .99));
+    box-shadow: 0 40px 110px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .05);
+    opacity: 0;
+    transform: translateY(18px) scale(.98);
+    transition: opacity .24s ease, transform .28s cubic-bezier(.2, .8, .25, 1);
+  }
+
+  .mission-picker.is-open .mission-sheet { opacity: 1; transform: none; }
+
+  .mission-sheet::before {
+    content: "";
+    position: absolute;
+    top: -1px;
+    left: 7%;
+    right: 7%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(242, 207, 122, .62), transparent);
+    pointer-events: none;
+  }
+
+  .picker-close {
+    position: absolute;
+    z-index: 3;
+    top: clamp(13px, 1.8vw, 19px);
+    right: clamp(13px, 1.8vw, 19px);
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(181, 199, 238, .2);
+    border-radius: 50%;
+    background: rgba(7, 12, 23, .7);
+    color: #dbe6ff;
+    font-family: var(--font-mono);
+    font-size: .95rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .2s ease, border-color .2s ease, transform .2s ease;
+  }
+
+  .picker-close:hover {
+    border-color: rgba(242, 207, 122, .45);
+    background: rgba(17, 25, 45, .9);
+    transform: rotate(6deg);
+  }
+
+  .mission-picker-head {
+    flex: 0 0 auto;
+    padding: clamp(17px, 2.4vw, 26px) clamp(18px, 3vw, 32px) 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .picker-head-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding-right: 38px;
+  }
+
+  .missions-picker-title {
+    margin: 0;
+    color: #eef3ff;
+    font-size: clamp(1.32rem, 2.1vw, 1.8rem);
+    font-weight: 700;
+    letter-spacing: .08em;
+    line-height: 1.2;
+  }
+
+  .picker-subtitle {
+    margin: 5px 0 0;
+    color: var(--muted);
+    font-size: clamp(.68rem, .78vw, .8rem);
+    line-height: 1.5;
+  }
+
+  .picker-progress {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex-wrap: wrap;
+    padding-bottom: 2px;
+  }
+
+  .picker-progress-text {
+    color: var(--gold);
+    font-family: var(--font-mono);
+    font-size: clamp(.74rem, .85vw, .9rem);
+    letter-spacing: .04em;
+    line-height: 1;
+  }
+
+  .picker-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .picker-dots i {
+    width: 14px;
+    height: 3px;
+    border-radius: 99px;
+    background: rgba(163, 184, 235, .16);
+    transition: background .2s ease, box-shadow .2s ease;
+  }
+
+  .picker-dots i.is-filled {
+    background: var(--gold);
+    box-shadow: 0 0 8px rgba(242, 207, 122, .36);
+  }
+
+  .mission-picker-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: clamp(14px, 2.1vw, 23px) clamp(14px, 2.6vw, 28px) clamp(16px, 2.2vw, 24px);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(138, 161, 211, .35) transparent;
+  }
+
+  .mission-picker-body::-webkit-scrollbar { width: 5px; }
+  .mission-picker-body::-webkit-scrollbar-track { background: transparent; }
+  .mission-picker-body::-webkit-scrollbar-thumb { border-radius: 99px; background: rgba(138, 161, 211, .32); }
+
+  .picker-groups {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(9px, 1.4vw, 16px);
+  }
+
+  .picker-group {
+    padding: clamp(9px, 1.2vw, 14px);
+    border: 1px solid rgba(var(--mission-rgb), .22);
+    border-radius: 17px;
+    background:
+      linear-gradient(180deg, rgba(var(--mission-rgb), .055), transparent 46%),
+      rgba(4, 8, 17, .4);
+  }
+
+  .picker-group-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 9px;
+  }
+
+  .picker-group-badge {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: 0 0 auto;
+    border: 1px solid rgba(var(--mission-rgb), .42);
+    border-radius: 8px;
+    background: rgba(var(--mission-rgb), .08);
+    color: var(--mission-accent);
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    font-weight: 600;
+  }
+
+  .picker-group-title {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .picker-group-title strong {
+    color: #dfe8fb;
+    font-size: clamp(.72rem, .8vw, .84rem);
+    font-weight: 600;
+    letter-spacing: .06em;
+    line-height: 1.2;
+  }
+
+  .picker-group-title small {
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(5px, .48vw, 7px);
+    letter-spacing: .08em;
+    line-height: 1.3;
+  }
+
+  .picker-group-count {
+    margin-left: auto;
+    color: rgba(146, 159, 189, .7);
+    font-family: var(--font-mono);
+    font-size: clamp(5px, .5vw, 7px);
+    letter-spacing: .04em;
+    white-space: nowrap;
+  }
+
+  .picker-options {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .picker-option {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-width: 0;
+    padding: 7px;
+    overflow: hidden;
+    border: 1px solid rgba(163, 184, 235, .13);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .023);
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .2s ease, background .2s ease, transform .2s ease;
+  }
+
+  .picker-option:hover {
+    transform: translateY(-1px);
+    border-color: rgba(var(--mission-rgb), .44);
+    background: rgba(var(--mission-rgb), .06);
+  }
+
+  .picker-option.is-selected {
+    border-color: rgba(var(--mission-rgb), .72);
+    background: rgba(var(--mission-rgb), .12);
+    box-shadow: inset 0 0 0 1px rgba(var(--mission-rgb), .12), 0 0 20px rgba(var(--mission-rgb), .08);
+  }
+
+  .picker-option-art {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    aspect-ratio: 85 / 70;
+    flex: 0 0 72px;
+    overflow: hidden;
+    border: 1px solid rgba(var(--mission-rgb), .2);
+    border-radius: 8px;
+    background: linear-gradient(150deg, #f4eddd, #e6dac2);
+  }
+
+  .picker-option-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    -webkit-user-drag: none;
+  }
+
+  .picker-option-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .picker-option-id {
+    color: #e6edff;
+    font-family: var(--font-mono);
+    font-size: clamp(.66rem, .74vw, .78rem);
+    font-weight: 500;
+    letter-spacing: .05em;
+    line-height: 1.1;
+  }
+
+  .picker-option-scores {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px 9px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(5px, .5vw, 7px);
+    letter-spacing: .02em;
+    line-height: 1.3;
+    white-space: nowrap;
+  }
+
+  .picker-option-scores b {
+    color: var(--mission-accent);
+    font-weight: 500;
+  }
+
+  .picker-check {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    display: grid;
+    place-items: center;
+    width: 17px;
+    height: 17px;
+    border: 1px solid rgba(163, 184, 235, .24);
+    border-radius: 50%;
+    background: rgba(4, 8, 15, .7);
+    color: transparent;
+    font-size: 9px;
+    line-height: 1;
+    transition: background .2s ease, border-color .2s ease, color .2s ease;
+  }
+
+  .picker-option.is-selected .picker-check {
+    border-color: var(--mission-accent);
+    background: var(--mission-accent);
+    color: #12151d;
+  }
+
+  .mission-picker-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex: 0 0 auto;
+    padding: 12px clamp(18px, 2.6vw, 28px);
+    border-top: 1px solid var(--line);
+    background: rgba(4, 8, 16, .55);
+  }
+
+  .mission-picker-foot p {
+    margin: 0;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(6px, .6vw, 8px);
+    letter-spacing: .04em;
+    line-height: 1.5;
+  }
+
+  .mission-sheet.is-ready .picker-option { pointer-events: none; }
+  .mission-sheet.is-ready .mission-picker-foot p { color: var(--gold); }
+
+  /* ---------- footer ---------- */
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px 24px;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(6px, .58vw, 8px);
+    line-height: 1.6;
+    letter-spacing: .08em;
+  }
+
+  .legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px 12px;
+  }
+
+  .legend span { white-space: nowrap; }
+  .legend b { color: #c6d4ee; font-weight: 500; }
+  .footer-meta { color: rgba(146, 159, 189, .74); white-space: nowrap; }
+
+  /* ---------- enlarged card modal ---------- */
+  body.modal-open { overflow: hidden; }
+
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: grid;
+    place-items: center;
+    padding: clamp(14px, 3.5vw, 36px);
+  }
+
+  .modal[hidden] { display: none; }
+
+  .modal-scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(2, 4, 10, .82);
+    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px);
+    opacity: 0;
+    transition: opacity .22s ease;
+  }
+
+  .modal.is-open .modal-scrim { opacity: 1; }
+
+  .modal-stage {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 13px;
+    opacity: 0;
+    transform: translateY(16px) scale(.975);
+    transition: opacity .24s ease, transform .24s cubic-bezier(.2, .8, .25, 1);
+  }
+
+  .modal.is-open .modal-stage { opacity: 1; transform: none; }
+
+  .modal-card-wrap {
+    --card-w: min(62vh, 78vw, 430px);
+    width: var(--card-w);
+    filter: drop-shadow(0 34px 70px rgba(0, 0, 0, .6));
+  }
+
+  .modal-caption {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: clamp(9px, .9vw, 11px);
+    letter-spacing: .1em;
+    text-align: center;
+  }
+
+  .modal-caption strong {
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: clamp(.82rem, 1.1vw, 1rem);
+    font-weight: 600;
+    letter-spacing: .06em;
+  }
+
+  .modal-close {
+    position: absolute;
+    z-index: 3;
+    top: max(12px, env(safe-area-inset-top));
+    right: max(12px, env(safe-area-inset-right));
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border: 1px solid rgba(181, 199, 238, .2);
+    border-radius: 50%;
+    background: rgba(8, 13, 25, .7);
+    color: #dbe6ff;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 1.15rem;
+    line-height: 1;
+    transition: background .2s ease, border-color .2s ease, transform .2s ease;
+  }
+
+  .modal-close:hover {
+    border-color: rgba(242, 207, 122, .45);
+    background: rgba(17, 25, 45, .9);
+    transform: rotate(6deg);
+  }
+
+  /* ---------- motion ---------- */
+  @keyframes twinkle {
+    from { opacity: calc(var(--opacity) * .32); transform: scale(.82); }
+    to { opacity: var(--opacity); transform: scale(1.08); }
+  }
+
+  @keyframes shoot {
+    0%, 90%, 100% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-31deg) scaleX(.4); }
+    91% { opacity: 0; }
+    92% { opacity: .9; transform: translate3d(0, 0, 0) rotate(-31deg) scaleX(1); }
+    96% { opacity: 0; transform: translate3d(-260px, 170px, 0) rotate(-31deg) scaleX(.15); }
+  }
+
+  @keyframes slowOrbit { to { transform: rotate(360deg); } }
+
+  @keyframes riseIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes laneIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes actionDeal {
+    0% { opacity: 0; transform: translateY(-26px) rotateX(52deg) scale(.96); }
+    55% { opacity: 1; }
+    100% { opacity: 1; transform: translateY(0) rotateX(0) scale(1); }
+  }
+
+  @keyframes numberDeal {
+    0% { opacity: 0; transform: translateY(-10px) rotateX(-24deg) scale(.98); }
+    100% { opacity: 1; transform: translateY(0) rotateX(0) scale(1); }
+  }
+
+  @keyframes faceShuffle {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    30% { transform: translate(-4px, -3px) rotate(-1.7deg); }
+    60% { transform: translate(4px, -1px) rotate(1.1deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+  }
+
+  .draw-stack.is-new .card-shell {
+    animation: numberDeal .42s cubic-bezier(.2, .78, .25, 1) both;
+  }
+
+  .draw-stack.is-shuffling .card-shell {
+    animation: faceShuffle .6s cubic-bezier(.25, .7, .2, 1) both;
+    animation-delay: calc(var(--lane-index, 0) * 55ms);
+  }
+
+  .lane.is-recycled .lane-body {
+    animation: recycleGlow .8s ease-out both;
+  }
+
+  @keyframes recycleGlow {
+    0% { box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), .2), 0 0 0 rgba(var(--accent-rgb), 0); }
+    35% { box-shadow: inset 0 0 60px rgba(var(--accent-rgb), .09), 0 0 28px rgba(var(--accent-rgb), .1); }
+    100% { box-shadow: inset 0 0 34px rgba(var(--accent-rgb), .025), 0 0 0 rgba(var(--accent-rgb), 0); }
+  }
+
+  @keyframes missionHit {
+    0% { transform: translateY(-3px) scale(1); }
+    35% { transform: translateY(-3px) scale(1.018); }
+    100% { transform: translateY(0) scale(1); }
+  }
+
+  @keyframes missionClaim {
+    0% { transform: rotateY(0deg); filter: brightness(1.25); }
+    35% { transform: rotateY(-7deg) scale(1.015); filter: brightness(1.15); }
+    70% { transform: rotateY(2deg); }
+    100% { transform: rotateY(0deg); filter: brightness(1); }
+  }
+
+  @keyframes scorePop {
+    0% { opacity: 0; transform: translateY(8px) scale(.9); }
+    22% { opacity: 1; transform: translateY(-2px) scale(1.06); }
+    70% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-24px) scale(1); }
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 960px) {
+    .hud {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px 22px;
+    }
+
+    .controls { grid-column: 2; grid-row: 1; }
+
+    .hud-readout {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      width: 100%;
+      height: 54px;
+    }
+
+    .readout {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .board-head { align-items: flex-start; }
+    .lanes { gap: 8px; }
+
+    .picker-option-art {
+      width: 58px;
+      flex-basis: 58px;
+    }
+
+    .picker-option-scores { gap: 2px 6px; }
+  }
+
+  @media (max-width: 720px) {
+    html { scrollbar-gutter: auto; }
+
+    .app { gap: 14px; }
+
+    .game-layout {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    .level-bar {
+      padding: 10px 11px;
+      border-radius: 14px;
+    }
+
+    .level-left { width: 100%; }
+
+    .level-select-wrap { flex: 1 1 150px; }
+    .level-select { width: 100%; min-width: 0; }
+    .level-hint { flex-basis: 100%; white-space: normal; }
+
+    .flip-bar {
+      padding: 8px 10px;
+    }
+
+    .flip-bar #flip {
+      flex: 1 1 auto;
+      width: auto;
+      min-width: 0;
+    }
+
+    .flip-bar #undo-flip {
+      flex: 0 0 104px;
+      min-width: 0;
+      padding: 0 8px;
+    }
+
+    .mission-zone {
+      position: static;
+      max-height: none;
+      overflow: visible;
+      padding: 12px;
+      border-radius: 20px;
+    }
+
+    .mission-head {
+      padding: 0;
+      margin-bottom: 5px;
+    }
+
+    .mission-rule { display: block; max-width: none; }
+
+    .missions {
+      display: flex;
+      gap: 8px;
+      max-width: none;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0 0 6px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(138, 161, 211, .35) transparent;
+      overscroll-behavior-x: contain;
+    }
+
+    .missions::-webkit-scrollbar { height: 4px; }
+    .missions::-webkit-scrollbar-track { background: transparent; }
+    .missions::-webkit-scrollbar-thumb { border-radius: 99px; background: rgba(138, 161, 211, .32); }
+
+    .mission-card,
+    .mission-placeholder {
+      flex: 0 0 min(82vw, 340px);
+      min-height: 0;
+      scroll-snap-align: center;
+    }
+
+    .mission-picker { padding: 8px; }
+
+    .mission-sheet {
+      max-height: calc(100svh - 16px);
+      border-radius: 21px;
+    }
+
+    .mission-picker-head {
+      padding: 16px 14px 12px;
+    }
+
+    .picker-head-row { padding-right: 34px; }
+
+    .mission-picker-body { padding: 12px; }
+
+    .picker-groups {
+      grid-template-columns: 1fr;
+      gap: 9px;
+    }
+
+    .picker-group { padding: 9px; }
+
+    .picker-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .picker-option {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 5px;
+      padding: 6px;
+    }
+
+    .picker-option-art {
+      width: 100%;
+      flex: 0 0 auto;
+      aspect-ratio: 85 / 70;
+    }
+
+    .picker-option-info { padding: 0 2px 2px; }
+
+    .picker-check { top: 8px; right: 8px; }
+
+    .mission-picker-foot { padding: 10px 14px; }
+
+    .picker-close { top: 11px; right: 11px; }
+
+    .board-zone {
+      padding: 14px 0 16px;
+      border-radius: 23px;
+    }
+
+    .board-head,
+    .board-meta,
+    .draw-hint {
+      padding-left: 14px;
+      padding-right: 14px;
+    }
+
+    .board-meta {
+      margin: 9px 0 10px;
+    }
+
+    .key-rule { display: none; }
+    .mobile-swipe { display: inline; }
+    .status { width: 100%; max-width: 100%; font-size: .69rem; padding: 6px 9px; border-radius: 10px; }
+
+    .lanes {
+      display: flex;
+      gap: 12px;
+      max-width: none;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 4px 18px 14px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(138, 161, 211, .35) transparent;
+      overscroll-behavior-x: contain;
+    }
+
+    .lanes::-webkit-scrollbar { height: 5px; }
+    .lanes::-webkit-scrollbar-track { background: transparent; }
+    .lanes::-webkit-scrollbar-thumb { border-radius: 99px; background: rgba(138, 161, 211, .32); }
+
+    .lane {
+      --card-w: min(62vw, 290px);
+      flex: 0 0 min(80vw, 400px);
+      scroll-snap-align: center;
+    }
+
+    .draw-hint { font-size: 7px; margin-top: 10px; }
+    .draw-hint .hint-desktop { display: none; }
+    .draw-hint .hint-mobile { display: inline; }
+
+    .modal-card-wrap { --card-w: min(66vh, 86vw, 430px); }
+  }
+
+  @media (max-width: 640px) {
+    .app {
+      gap: 20px;
+      padding: 14px 12px 18px;
+    }
+
+    .hud {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 13px;
+      padding-bottom: 15px;
+    }
+
+    .brand { gap: 10px; }
+    .brand-mark { width: 44px; }
+    .eyebrow { font-size: 7px; letter-spacing: .16em; }
+    h1 { margin-top: 3px; font-size: clamp(1.58rem, 7.2vw, 1.95rem); }
+
+    .controls {
+      grid-column: 1;
+      grid-row: 2;
+      display: grid;
+      grid-template-columns: minmax(0, .86fr) minmax(0, 1.14fr);
+      gap: 8px;
+    }
+
+    .btn {
+      min-width: 0 !important;
+      min-height: 53px;
+      padding: 0 12px;
+      border-radius: 14px;
+    }
+
+    .header-level-select { width: 100%; }
+    .controls .level-select {
+      width: 100%;
+      min-width: 0;
+      height: 53px;
+    }
+
+    .flip-bar #flip { min-height: 53px; }
+
+    .btn-glyph { width: 24px; height: 24px; font-size: .9rem; }
+    .btn-main { font-size: .87rem; }
+
+    .hud-readout {
+      grid-column: 1;
+      grid-row: 3;
+      height: 50px;
+      border-radius: 13px;
+    }
+
+    .readout { padding: 0 10px; }
+    .readout-label { font-size: 7px; letter-spacing: .1em; }
+    .readout-value strong { font-size: 1.03rem; }
+    .readout-value small { font-size: .48rem; }
+
+    .board-head { gap: 10px; }
+    .board-head h2 { font-size: 1.08rem; }
+    .board-meta { font-size: 7px; }
+    .section-kicker { font-size: 7px; letter-spacing: .16em; }
+
+    .level-label { font-size: 7px; }
+    .level-select { height: 38px; font-size: .75rem; }
+    .level-hint { font-size: 6px; }
+
+    .mission-head h2 { font-size: 1rem; }
+    .mission-head .section-kicker { font-size: 7px; }
+    .mini-btn { min-height: 28px; padding: 4px 7px; font-size: 7px; }
+
+    .mission-card {
+      flex-basis: min(78vw, 330px);
+      padding: 8px;
+    }
+
+    .mission-placeholder {
+      flex-basis: min(78vw, 330px);
+      min-height: 0;
+      padding: 11px;
+    }
+
+    .mission-card-body {
+      grid-template-columns: 84px minmax(0, 1fr);
+    }
+
+    .mission-card-body .score-tile { min-height: 62px; }
+    .mission-card-body .score-value { font-size: 1.12rem; }
+    .mission-card-body .score-label { font-size: 7px; }
+    .mission-current strong { font-size: 1.05rem; }
+    .mission-rule { font-size: 6px; }
+
+    .mission-picker-head { padding-top: 15px; }
+    .missions-picker-title { font-size: 1.2rem; }
+    .picker-subtitle { font-size: .67rem; }
+    .picker-progress-text { font-size: .7rem; }
+    .picker-dots i { width: 11px; }
+
+    .picker-option-id { font-size: .68rem; }
+    .picker-option-scores { font-size: 7px; }
+    .picker-group-title strong { font-size: .68rem; }
+    .picker-group-title small { font-size: 6.5px; }
+    .mission-picker-foot p { font-size: 7px; }
+
+    .lane-title small { display: none; }
+    .lane-code { width: 22px; height: 22px; font-size: .55rem; }
+    .lane-title strong { font-size: .74rem; }
+    .lane-count strong { font-size: 1.35rem; }
+
+    .lane {
+      --card-w: min(64vw, 300px);
+      flex-basis: min(80vw, 410px);
+    }
+
+    .lane-body { padding: 8px; border-radius: 19px; }
+    .lane-foot { font-size: 7px; }
+    .lane-note { font-size: 7px; }
+
+    footer {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 12px;
+      font-size: 7px;
+    }
+
+    .modal { padding: 12px; }
+    .modal-card-wrap { --card-w: min(66vh, 86vw, 430px); }
+    .modal-close { width: 42px; height: 42px; }
+
+    .shooting-star { left: 58%; top: 17%; }
+  }
+
+  @media (max-width: 380px) {
+    .eyebrow { display: none; }
+    h1 { font-size: 1.55rem; }
+    .lane { --card-w: min(66vw, 265px); flex-basis: 82vw; }
+    .lane-title strong { font-size: .68rem; }
+    .lane-count strong { font-size: 1.2rem; }
+    .mission-card,
+    .mission-placeholder { flex-basis: 84vw; }
+    .level-hint { display: none; }
+    .mission-picker-foot p { max-width: 72%; }
+  }
+
+  @media (min-width: 721px) and (max-height: 900px) {
+    .app {
+      gap: 9px;
+      padding-top: 10px;
+      padding-bottom: 8px;
+    }
+
+    .hud { padding-bottom: 9px; }
+    .hud-readout { height: 50px; }
+    .btn { min-height: 50px; }
+    .level-bar { padding: 4px 10px; }
+    .level-select { height: 34px; }
+
+    .board-zone { padding: 10px 10px 8px; }
+    .board-head h2 { font-size: 1rem; }
+    .board-meta,
+    .draw-hint,
+    footer { display: none; }
+
+    .lane {
+      --card-w: clamp(96px, min(13vw, 19vh), 190px);
+      gap: 4px;
+    }
+
+    .lane-body { padding: 5px; }
+    .pair-connector { height: 16px; }
+
+    .mission-zone {
+      top: 8px;
+      max-height: calc(100svh - 16px);
+      padding: 9px;
+    }
+
+    .mission-head h2 { font-size: .94rem; }
+    .mission-rule { display: none; }
+    .mission-summary { margin-bottom: 6px; }
+    .mission-stat { padding: 5px 7px; }
+    .mission-card { gap: 3px; padding: 6px 8px; }
+    .mission-art { aspect-ratio: 85 / 62; }
+    .mission-card-body .score-tile { min-height: 54px; }
+    .mission-card-body .score-value { font-size: 1.02rem; }
+    .mission-description { padding-top: 2px; font-size: 8.5px; line-height: 1.45; }
+    .mission-card-footer { padding-top: 2px; }
+  }
+
+  /* ---------- mission card refinement ---------- */
+  .mission-card {
+    gap: 7px;
+    padding: 10px 11px 10px 14px;
+    border: 1px solid rgba(158, 181, 235, .12);
+    border-radius: 15px;
+    background: linear-gradient(160deg, rgba(16, 24, 44, .8), rgba(6, 10, 20, .92));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .mission-card::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 20%;
+    bottom: 20%;
+    width: 2px;
+    border-radius: 0 2px 2px 0;
+    background: linear-gradient(180deg, transparent, var(--mission-accent), transparent);
+    opacity: .42;
+    pointer-events: none;
+    transition: opacity .22s ease;
+  }
+
+  .mission-card:hover {
+    border-color: rgba(var(--mission-rgb), .26);
+    background: linear-gradient(160deg, rgba(20, 29, 52, .86), rgba(7, 11, 22, .94));
+    box-shadow: 0 12px 28px rgba(0, 0, 0, .18), inset 0 1px 0 rgba(255, 255, 255, .045);
+  }
+
+  .mission-card.is-claimed {
+    border-color: rgba(var(--mission-rgb), .32);
+    background: linear-gradient(160deg, rgba(22, 29, 45, .86), rgba(8, 11, 20, .94));
+    box-shadow: 0 12px 26px rgba(0, 0, 0, .16), inset 0 1px 0 rgba(255, 255, 255, .04);
+  }
+
+  .mission-card.is-claimed .mission-card-main .mission-art {
+    background: rgba(255, 255, 255, .035);
+  }
+
+  .mission-card.is-claimed::before { opacity: .9; }
+
+  .mission-card:focus-visible {
+    outline: 2px solid rgba(var(--mission-rgb), .7);
+    outline-offset: 2px;
+  }
+
+  .mission-card-head {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .mission-card .mission-group-badge {
+    width: 22px;
+    height: 22px;
+    border: 1px solid rgba(var(--mission-rgb), .34);
+    border-radius: 7px;
+    background: rgba(var(--mission-rgb), .065);
+    font-size: .62rem;
+    letter-spacing: .02em;
+  }
+
+  .mission-score-cluster {
+    display: flex;
+    align-items: stretch;
+    flex: 0 1 190px;
+    min-width: 0;
+    margin-left: auto;
+  }
+
+  .mission-score {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 2px;
+    min-width: 0;
+    min-height: 46px;
+    padding: 1px 0 1px 12px;
+  }
+
+  .mission-score--high {
+    flex: 1.15;
+    padding-right: 12px;
+  }
+
+  .mission-score--high::before {
+    content: "";
+    position: absolute;
+    inset: -3px -6px -3px -3px;
+    z-index: -1;
+    border-radius: 10px;
+    background: radial-gradient(ellipse at 62% 48%, rgba(242, 207, 122, .075), transparent 72%);
+    pointer-events: none;
+  }
+
+  .mission-score--low {
+    flex: .85;
+    border-left: 1px solid rgba(163, 184, 235, .12);
+    padding-left: 12px;
+  }
+
+  .mission-score-kicker {
+    color: rgba(176, 192, 218, .46);
+    font-family: var(--font-mono);
+    font-size: 6.5px;
+    font-weight: 500;
+    letter-spacing: .12em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .mission-score--high .mission-score-kicker { color: rgba(242, 207, 122, .66); }
+
+  .mission-score-number {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    color: rgba(211, 223, 244, .72);
+    font-family: var(--font-mono);
+    font-size: clamp(1rem, 1.2vw, 1.15rem);
+    font-weight: 500;
+    letter-spacing: -.04em;
+    line-height: 1.05;
+    white-space: nowrap;
+    transition: opacity .2s ease;
+  }
+
+  .mission-score-number small {
+    font-size: .48em;
+    font-weight: 400;
+    letter-spacing: 0;
+    opacity: .48;
+  }
+
+  .mission-score--high .mission-score-number {
+    color: #fff3d4;
+    font-size: clamp(1.2rem, 1.55vw, 1.42rem);
+  }
+
+  .mission-score-symbol {
+    display: inline-block;
+    font-size: 1.18em;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+
+  .mission-score--high .mission-score-symbol { color: #ffe6a3; }
+
+  .mission-score--low .mission-score-symbol {
+    color: rgba(211, 223, 244, .7);
+    font-size: 1.05em;
+  }
+
+  .mission-score--high .accomplished-stamp {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .mission-card.is-claimed .mission-score--high .mission-score-number { opacity: .06; }
+
+  .mission-card-main {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .mission-card-main .mission-art {
+    width: clamp(58px, 5.5vw, 82px);
+    min-height: 0;
+    aspect-ratio: 85 / 70;
+    padding: 4px;
+    overflow: hidden;
+    border: 1px solid rgba(173, 193, 228, .12);
+    border-radius: 9px;
+    background: rgba(255, 255, 255, .028);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+  }
+
+  .mission-card-main .mission-art::before { display: none; }
+
+  .mission-card-main .mission-art img {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .18));
+  }
+
+  .mission-card-main .mission-description {
+    padding: 0;
+    border: 0;
+    color: rgba(183, 198, 222, .74);
+    font-family: var(--font-sans);
+    font-size: 9px;
+    line-height: 1.65;
+    letter-spacing: .02em;
+    overflow-wrap: anywhere;
+  }
+
+  .mission-card-main .mission-description:empty { display: none; }
+
+  @media (max-width: 720px) {
+    .mission-card {
+      gap: 8px;
+      padding: 10px 12px 10px 15px;
+    }
+
+    .mission-card-main .mission-art { width: 84px; }
+
+    .mission-score-cluster { flex-basis: 200px; }
+
+    .mission-score--high .mission-score-number { font-size: 1.32rem; }
+    .mission-score--low .mission-score-number { font-size: 1.1rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: .01ms !important;
+    }
+
+    .star { animation: none; }
+    .shooting-star { display: none; }
+    .action-card-button:hover .card-shell { transform: none; }
+    .action-card-button:hover .card-shine { transform: translateX(-125%); }
+  }
+</style>
+</head>
+<body>
+  <div class="space" aria-hidden="true">
+    <div class="moon"></div>
+    <div class="stars" id="stars"></div>
+    <div class="shooting-star"></div>
+  </div>
+
+  <div class="app" id="app">
+    <header class="hud">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div class="brand-copy">
+          <p class="eyebrow">LUNAR TRANSFER · 063</p>
+          <h1>欢迎来到<span>月球</span></h1>
+        </div>
+      </div>
+
+      <div class="hud-readout" aria-label="牌局状态">
+        <div class="readout readout--draw">
+          <span class="readout-label">待翻牌</span>
+          <span class="readout-value"><strong id="stat-draw">63</strong><small>张</small></span>
+        </div>
+        <div class="readout readout--round">
+          <span class="readout-label">回合</span>
+          <span class="readout-value"><strong id="stat-round">00</strong><small>轮</small></span>
+        </div>
+        <div class="readout readout--recycle">
+          <span class="readout-label">弃牌回洗</span>
+          <span class="readout-value"><strong id="stat-recycles">0</strong><small>次</small></span>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn--ghost" id="new-game" type="button" aria-label="重新洗牌并开始新游戏" title="只重洗星舰牌堆，不重置任务得分">
+          <span class="btn-glyph" aria-hidden="true">↻</span>
+          <span class="btn-copy">
+            <span class="btn-kicker">RESET</span>
+            <span class="btn-main">新游戏</span>
+          </span>
+        </button>
+        <div class="level-select-wrap header-level-select">
+          <select class="level-select" id="level-select" aria-label="选择关卡">
+            <option value="" selected>选择关卡</option>
+          </select>
+        </div>
+      </div>
+    </header>
+
+    <section class="level-bar flip-bar" aria-label="翻牌操作">
+      <button class="btn btn--primary" id="flip" type="button" aria-label="从三列牌堆顶部各翻一张牌">
+        <span class="btn-glyph" id="flip-glyph" aria-hidden="true">⇣</span>
+        <span class="btn-copy">
+          <span class="btn-kicker" id="flip-kicker">SPACE</span>
+          <span class="btn-main" id="flip-main">翻牌</span>
+        </span>
+      </button>
+      <button class="btn btn--ghost btn--undo" id="undo-flip" type="button" aria-label="回退到上一次翻牌" title="回退到上一次翻牌" disabled>
+        <span class="btn-glyph" aria-hidden="true">↶</span>
+        <span class="btn-copy">
+          <span class="btn-kicker">BACK</span>
+          <span class="btn-main">回退</span>
+        </span>
+      </button>
+      <span class="level-hint" id="level-hint">选择关卡后，从 A / B / C 各挑 1 个任务</span>
+    </section>
+
+    <main class="game-layout">
+      <section class="board-zone" aria-labelledby="board-title">
+        <div class="board-head">
+          <div>
+            <p class="section-kicker">01 / DOUBLE-SIDED FLIP TABLE</p>
+            <h2 id="board-title">星舰配对台</h2>
+          </div>
+          <p class="status" data-tone="ready">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="status-text" role="status" aria-live="polite">正在装载星舰牌…</span>
+          </p>
+        </div>
+
+        <div class="board-meta">
+          <div class="face-key" aria-label="牌面说明">
+            <span class="face-key-item"><i class="face-dot face-dot--number" aria-hidden="true"></i>数字面 · 牌堆顶</span>
+            <span class="key-arrow" aria-hidden="true">↕</span>
+            <span class="face-key-item"><i class="face-dot face-dot--action" aria-hidden="true"></i>行动面 · 本回合</span>
+            <span class="key-rule">抽空后仅用本列弃牌回洗</span>
+          </div>
+          <span class="mobile-swipe">左右滑动 3 组 · 上下滚动看配对</span>
+        </div>
+
+        <div class="lanes" id="lanes" aria-label="三列数字面与行动面配对区"></div>
+
+        <p class="draw-hint">
+          <span class="hint-desktop">点击行动面可放大 · <kbd>空格</kbd> 翻牌 · <kbd>N</kbd> 新游戏</span>
+          <span class="hint-mobile">左右滑动查看 3 组牌 · 上下滚动查看完整配对 · 点击行动面可放大</span>
+        </p>
+      </section>
+
+      <aside class="mission-zone" aria-labelledby="mission-title">
+        <div class="mission-head">
+          <div>
+            <p class="section-kicker">02 / MISSION OBJECTIVES</p>
+            <h2 id="mission-title">任务目标</h2>
+          </div>
+          <button class="mini-btn" id="reselect-missions" type="button" disabled>↺ 重选任务</button>
+        </div>
+        <p class="mission-rule">点击任务卡完成并记高分；再次点击同一张卡可撤销并恢复初始状态。</p>
+
+        <div class="missions" id="missions" aria-label="已选任务与得分"></div>
+        <span class="sr-only" id="mission-announcer" role="status" aria-live="polite"></span>
+      </aside>
+    </main>
+
+    <footer>
+      <div class="legend" id="action-legend" aria-label="行动图标对照">
+        <span><b>行动图标</b></span>
+      </div>
+      <span class="footer-meta">MISSION SCORING · 63 DOUBLE-SIDED CARDS</span>
+    </footer>
+  </div>
+
+  <div class="modal" id="card-modal" hidden>
+    <div class="modal-scrim" data-close aria-hidden="true"></div>
+    <button class="modal-close" id="modal-close" type="button" aria-label="关闭放大卡牌">✕</button>
+    <div class="modal-stage" role="dialog" aria-modal="true" aria-labelledby="modal-caption">
+      <div class="modal-card-wrap" id="modal-card-wrap"></div>
+      <div class="modal-caption" id="modal-caption"></div>
+    </div>
+  </div>
+
+  <div class="mission-picker" id="mission-picker" hidden>
+    <div class="mission-picker-scrim" data-mission-cancel aria-hidden="true"></div>
+    <div class="mission-sheet" id="mission-sheet" role="dialog" aria-modal="true" aria-labelledby="picker-title" aria-describedby="picker-footnote">
+      <button class="picker-close" id="picker-close" type="button" aria-label="取消并关闭任务选择">✕</button>
+      <header class="mission-picker-head">
+        <p class="section-kicker">MISSION BRIEFING</p>
+        <div class="picker-head-row">
+          <div>
+            <h2 class="missions-picker-title" id="picker-title">选择任务</h2>
+            <p class="picker-subtitle" id="picker-subtitle">从 A、B、C 每组各选择 1 个任务</p>
+          </div>
+          <div class="picker-progress">
+            <span class="picker-progress-text" id="picker-progress-text">0 / 3</span>
+            <span class="picker-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          </div>
+        </div>
+      </header>
+      <div class="mission-picker-body" id="mission-picker-body"></div>
+      <footer class="mission-picker-foot">
+        <p id="picker-footnote">从 A、B、C 每组各选择 1 个任务，选满 3 个后自动开始</p>
+        <button class="mini-btn" id="picker-cancel" type="button">取消</button>
+      </footer>
+    </div>
+  </div>
+
+  <script src="data/levels.js"></script>
+  <script>
+  (() => {
+    "use strict";
+
+    const GAME_DATA = window.WELCOME_MOON_DATA;
+    if (!GAME_DATA || !GAME_DATA.levels || !GAME_DATA.actions) {
+      const message = document.createElement("div");
+      message.setAttribute("role", "alert");
+      message.style.cssText = "position:fixed;inset:0;z-index:999;display:grid;place-items:center;background:#05070f;color:#ffb1aa;font:16px/1.7 sans-serif;text-align:center;padding:24px;";
+      message.textContent = "未能加载 data/levels.js，请检查资源文件是否存在。";
+      document.body.appendChild(message);
+      throw new Error("WELCOME_MOON_DATA is missing");
+    }
+
+    // 数据来自《63张卡牌数据.txt》：数字 1–15 各对应若干行动图标，共 63 张双面牌。
+    const CARD_DATA = Object.freeze({
+      1:  ["robot", "energy"],
+      2:  ["robot", "plant"],
+      3:  ["water", "astronaut", "planning"],
+      4:  ["energy", "plant", "astronaut", "planning"],
+      5:  ["robot", "robot", "energy", "energy", "plant"],
+      6:  ["robot", "energy", "plant", "water", "astronaut", "planning"],
+      7:  ["robot", "energy", "energy", "plant", "plant", "water"],
+      8:  ["robot", "robot", "plant", "plant", "water", "astronaut", "planning"],
+      9:  ["robot", "energy", "energy", "plant", "plant", "water"],
+      10: ["robot", "energy", "plant", "water", "astronaut", "planning"],
+      11: ["robot", "robot", "energy", "energy", "plant"],
+      12: ["energy", "plant", "astronaut", "planning"],
+      13: ["water", "astronaut", "planning"],
+      14: ["robot", "plant"],
+      15: ["robot", "energy"]
+    });
+
+    const PILE_META = Object.freeze([
+      { code: "01", name: "左堆", en: "LEFT DECK",   accent: "#f2cf7a", rgb: "242, 207, 122" },
+      { code: "02", name: "中堆", en: "CENTER DECK", accent: "#7cd9ff", rgb: "124, 217, 255" },
+      { code: "03", name: "右堆", en: "RIGHT DECK",  accent: "#ff9b88", rgb: "255, 155, 136" }
+    ]);
+
+    // 关卡、行动图标、任务分组和计分字段全部从 data/levels.js 读取。
+    const ACTIONS = Object.freeze(GAME_DATA.actions);
+    const MISSION_GROUPS = Object.freeze(GAME_DATA.groups);
+    const LEVEL_DATA = Object.freeze(GAME_DATA.levels);
+    const ACCOMPLISHED_IMAGE = GAME_DATA.assets.accomplished;
+    const MISSION_GROUP_ORDER = Object.freeze(Object.keys(MISSION_GROUPS));
+    const SCORING = Object.freeze(GAME_DATA.scoring || {});
+    const HIGH_SCORE_FIELD = SCORING.highScoreField || "highScore";
+    const LOW_SCORE_FIELD = SCORING.lowScoreField || "lowScore";
+    const CLAIM_SCORE_FIELD = SCORING.claimScoreField || HIGH_SCORE_FIELD;
+    const HIGH_SCORE_LABEL = SCORING.highLabel || "高分";
+    const LOW_SCORE_LABEL = SCORING.lowLabel || "低分";
+
+    const PILE_SIZE = 21;
+    const CARD_COUNT = 63;
+    const ANIMATION_MS = 640;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    const ui = {
+      stars: document.getElementById("stars"),
+      lanes: document.getElementById("lanes"),
+      statDraw: document.getElementById("stat-draw"),
+      statRound: document.getElementById("stat-round"),
+      statRecycles: document.getElementById("stat-recycles"),
+      status: document.querySelector(".status"),
+      statusText: document.getElementById("status-text"),
+      newGame: document.getElementById("new-game"),
+      flip: document.getElementById("flip"),
+      undoFlip: document.getElementById("undo-flip"),
+      flipGlyph: document.getElementById("flip-glyph"),
+      flipKicker: document.getElementById("flip-kicker"),
+      flipMain: document.getElementById("flip-main"),
+      cardModal: document.getElementById("card-modal"),
+      modalCardWrap: document.getElementById("modal-card-wrap"),
+      modalCaption: document.getElementById("modal-caption"),
+      modalClose: document.getElementById("modal-close"),
+      levelSelect: document.getElementById("level-select"),
+      levelHint: document.getElementById("level-hint"),
+      reselectMissions: document.getElementById("reselect-missions"),
+      missions: document.getElementById("missions"),
+      missionAnnouncer: document.getElementById("mission-announcer"),
+      reselectMissions: document.getElementById("reselect-missions"),
+      missionPicker: document.getElementById("mission-picker"),
+      missionSheet: document.getElementById("mission-sheet"),
+      pickerTitle: document.getElementById("picker-title"),
+      pickerSubtitle: document.getElementById("picker-subtitle"),
+      pickerProgressText: document.getElementById("picker-progress-text"),
+      pickerDots: Array.from(document.querySelectorAll(".picker-dots i")),
+      pickerFootnote: document.getElementById("picker-footnote"),
+      pickerBody: document.getElementById("mission-picker-body"),
+      pickerClose: document.getElementById("picker-close"),
+      pickerCancel: document.getElementById("picker-cancel"),
+      actionLegend: document.getElementById("action-legend")
+    };
+
+    const state = {
+      columns: PILE_META.map(() => ({ draw: [], discard: [], current: null, recycleCount: 0 })),
+      round: 0,
+      busy: false,
+      hasDrawn: false,
+      cardsById: new Map(),
+      history: [],
+      timer: null,
+      modalTimer: null,
+      modalTrigger: null
+    };
+
+    const levelState = {
+      activeLevelId: null,
+      activeLevel: null,
+      missions: [],
+      stats: new Map(),
+      missionRefs: new Map(),
+      picker: {
+        levelId: null,
+        selections: { A: null, B: null, C: null },
+        locked: false,
+        previousFocus: null,
+        autoTimer: null,
+        closeTimer: null
+      }
+    };
+
+    const random = createRandom();
+    let laneRefs = [];
+
+    init();
+
+    function init() {
+      populateLevelSelect();
+      populateActionLegend();
+      seedStars();
+      buildLanes();
+      buildMissionPlaceholders();
+      bindEvents();
+      startNewGame(true);
+      updateMissionSummary();
+      updateMissionActions();
+    }
+
+    function populateLevelSelect() {
+      const options = Object.entries(LEVEL_DATA)
+        .filter(([, level]) => level && level.enabled !== false)
+        .map(([levelKey, level]) => `<option value="${levelKey}">${level.name}</option>`)
+        .join("");
+      ui.levelSelect.innerHTML = `<option value="" selected>选择关卡</option>${options}`;
+    }
+
+    function populateActionLegend() {
+      const items = Object.keys(ACTIONS).map((actionKey) => {
+        const action = ACTIONS[actionKey];
+        return `<span>${actionGlyphMarkup(actionKey, "legend-glyph")} ${action.label}</span>`;
+      }).join("");
+      ui.actionLegend.innerHTML = `<span><b>行动图标</b></span>${items}`;
+    }
+
+    function actionGlyphMarkup(actionKey, extraClass = "") {
+      const action = ACTIONS[actionKey];
+      if (!action) return "";
+      const className = ["action-glyph", extraClass].filter(Boolean).join(" ");
+      return `
+        <span class="${className}" data-action="${actionKey}">
+          <span class="action-glyph-fallback" aria-hidden="true" hidden>${action.emoji}</span>
+          <img class="action-glyph-img" src="${action.image}" alt="" draggable="false"
+            onerror="this.hidden=true;this.previousElementSibling.hidden=false;">
+        </span>
+      `;
+    }
+
+    function createRandom() {
+      const cryptoObj = window.crypto || window.msCrypto;
+      if (cryptoObj && typeof cryptoObj.getRandomValues === "function") {
+        const buffer = new Uint32Array(1);
+        return () => {
+          cryptoObj.getRandomValues(buffer);
+          return buffer[0] / 4294967296;
+        };
+      }
+      return Math.random;
+    }
+
+    function shuffleInPlace(items) {
+      for (let i = items.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(random() * (i + 1));
+        const temp = items[i];
+        items[i] = items[j];
+        items[j] = temp;
+      }
+      return items;
+    }
+
+    function createDeck() {
+      const deck = [];
+      let id = 1;
+      Object.keys(CARD_DATA).forEach((numberKey) => {
+        const number = Number(numberKey);
+        CARD_DATA[number].forEach((action) => {
+          deck.push({ id, number, action });
+          id += 1;
+        });
+      });
+      return deck;
+    }
+
+    function validateDeck(deck) {
+      if (deck.length !== CARD_COUNT) {
+        console.error(`卡牌数量异常：期望 ${CARD_COUNT} 张，实际 ${deck.length} 张。`);
+      }
+      const actionTotals = {};
+      deck.forEach((card) => {
+        actionTotals[card.action] = (actionTotals[card.action] || 0) + 1;
+      });
+      console.info("双面星舰牌组已就绪：63 张", actionTotals);
+    }
+
+    function seedStars() {
+      const fragment = document.createDocumentFragment();
+      for (let i = 0; i < 92; i += 1) {
+        const star = document.createElement("i");
+        const size = (Math.random() * 1.7 + 0.7).toFixed(2);
+        star.className = "star";
+        star.style.setProperty("--x", `${(Math.random() * 100).toFixed(2)}%`);
+        star.style.setProperty("--y", `${(Math.random() * 100).toFixed(2)}%`);
+        star.style.setProperty("--size", `${size}px`);
+        star.style.setProperty("--opacity", (Math.random() * 0.62 + 0.18).toFixed(2));
+        star.style.setProperty("--duration", `${(Math.random() * 4.5 + 2.8).toFixed(2)}s`);
+        star.style.setProperty("--delay", `${(Math.random() * -8).toFixed(2)}s`);
+        fragment.appendChild(star);
+      }
+      ui.stars.appendChild(fragment);
+    }
+
+    function buildLanes() {
+      ui.lanes.innerHTML = PILE_META.map((meta, index) => `
+        <article class="lane" data-lane="${index}" data-pair="${meta.code}" data-depth="3"
+          style="--accent:${meta.accent};--accent-rgb:${meta.rgb};--lane-index:${index};"
+          aria-label="${meta.name}">
+          <div class="lane-head">
+            <div class="lane-name">
+              <span class="lane-code" aria-hidden="true">${meta.code}</span>
+              <span class="lane-title"><strong>${meta.name}</strong><small>${meta.en}</small></span>
+            </div>
+            <span class="lane-count" aria-hidden="true"><strong data-count>21</strong><span>张</span></span>
+          </div>
+
+          <div class="lane-body" data-pair="${meta.code}">
+            <div class="draw-slot" data-draw></div>
+            <div class="pair-connector" aria-hidden="true"><span>↓</span></div>
+            <div class="action-slot" data-action></div>
+          </div>
+
+          <div class="lane-foot">
+            <span class="lane-discard">弃牌 <strong data-discard>0</strong></span>
+            <span class="lane-note" data-note>等待翻牌</span>
+          </div>
+        </article>
+      `).join("");
+
+      laneRefs = Array.from(ui.lanes.querySelectorAll(".lane")).map((lane) => ({
+        el: lane,
+        count: lane.querySelector("[data-count]"),
+        discard: lane.querySelector("[data-discard]"),
+        drawSlot: lane.querySelector("[data-draw]"),
+        actionSlot: lane.querySelector("[data-action]"),
+        note: lane.querySelector("[data-note]")
+      }));
+    }
+
+    function missionsReady() {
+      return Boolean(levelState.activeLevelId && levelState.activeLevel && levelState.missions.length === 3);
+    }
+
+    function buildMissionPlaceholders() {
+      ui.missions.innerHTML = MISSION_GROUP_ORDER.map((group) => {
+        const meta = MISSION_GROUPS[group];
+        return `
+          <div class="mission-placeholder" style="--mission-accent:${meta.accent};--mission-rgb:${meta.rgb};">
+            <b style="color:${meta.accent}">${group}</b>
+            <strong>${meta.name}任务</strong>
+            <small>选择关卡后挑选 1 个</small>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderMissionCards() {
+      levelState.missionRefs.clear();
+      ui.missions.innerHTML = levelState.missions.map((mission) => missionCardMarkup(mission)).join("");
+
+      levelState.missions.forEach((mission) => {
+        const el = ui.missions.querySelector(`.mission-card[data-mission-id="${mission.id}"]`);
+        if (!el) return;
+        levelState.missionRefs.set(mission.id, {
+          el,
+          pop: el.querySelector("[data-pop]"),
+          hitTimer: null,
+          claimTimer: null,
+          popTimer: null
+        });
+        updateMissionCard(mission.id);
+      });
+    }
+
+    function scoreDisplayText(mission, field, displayField) {
+      const custom = mission[displayField];
+      if (custom !== undefined && custom !== null && String(custom).trim() !== "") {
+        return String(custom);
+      }
+      return `${mission[field] ?? 0} 分`;
+    }
+
+    function scoreDisplayMarkup(mission, field, displayField) {
+      const custom = mission[displayField];
+      if (custom !== undefined && custom !== null && String(custom).trim() !== "") {
+        return `<span class="mission-score-symbol">${custom}</span>`;
+      }
+      return `${mission[field] ?? 0}<small>分</small>`;
+    }
+
+    function missionCardMarkup(mission) {
+      const group = MISSION_GROUPS[mission.group] || MISSION_GROUPS.A;
+
+      return `
+        <button
+          class="mission-card"
+          type="button"
+          data-mission-id="${mission.id}"
+          style="--mission-accent:${group.accent};--mission-rgb:${group.rgb};"
+          aria-label="${mission.id} 任务"
+          aria-pressed="false"
+        >
+          <span class="mission-card-head">
+            <span class="mission-group-badge" aria-hidden="true">${mission.group}</span>
+            <span class="mission-score-cluster">
+              <span class="mission-score mission-score--high">
+                <span class="mission-score-kicker">${HIGH_SCORE_LABEL}</span>
+                <span class="mission-score-number">${scoreDisplayMarkup(mission, HIGH_SCORE_FIELD, "highDisplay")}</span>
+                <img class="accomplished-stamp" src="${ACCOMPLISHED_IMAGE}" alt="" draggable="false">
+              </span>
+              <span class="mission-score mission-score--low">
+                <span class="mission-score-kicker">${LOW_SCORE_LABEL}</span>
+                <span class="mission-score-number">${scoreDisplayMarkup(mission, LOW_SCORE_FIELD, "lowDisplay")}</span>
+              </span>
+            </span>
+          </span>
+
+          <span class="mission-card-main">
+            <span class="mission-art">
+              <img src="${mission.image}" alt="" draggable="false">
+            </span>
+            <span class="mission-description">${mission.description || ""}</span>
+          </span>
+
+          <span class="score-pop" data-pop aria-hidden="true"></span>
+        </button>
+      `;
+    }
+
+    function updateMissionCard(missionId, options = {}) {
+      const mission = levelState.missions.find((item) => item.id === missionId);
+      const stats = levelState.stats.get(missionId);
+      const ref = levelState.missionRefs.get(missionId);
+      if (!mission || !stats || !ref) return;
+
+      const group = MISSION_GROUPS[mission.group] || MISSION_GROUPS.A;
+      const highText = scoreDisplayText(mission, HIGH_SCORE_FIELD, "highDisplay");
+      const lowText = scoreDisplayText(mission, LOW_SCORE_FIELD, "lowDisplay");
+      const description = mission.description ? `任务说明：${mission.description}` : "";
+      ref.el.classList.toggle("is-claimed", stats.claimed);
+      ref.el.setAttribute("aria-pressed", String(stats.claimed));
+      ref.el.setAttribute(
+        "aria-label",
+        `${mission.id} 任务，${group.name}。${HIGH_SCORE_LABEL} ${highText}，${LOW_SCORE_LABEL} ${lowText}。` +
+        (description ? `${description}。` : "") +
+        (stats.claimed
+          ? `已完成，获得 ${highText}；再次点击可撤销。`
+          : "点击完成任务，按高分记录。")
+      );
+
+      if (!options.animate) return;
+
+      if (options.points) {
+        const negative = options.points < 0;
+        ref.pop.textContent = negative ? `−${Math.abs(options.points)}` : `+${options.points}`;
+        ref.pop.classList.toggle("is-negative", negative);
+        window.clearTimeout(ref.popTimer);
+        ref.pop.classList.remove("is-active");
+        void ref.pop.offsetWidth;
+        ref.pop.classList.add("is-active");
+        ref.popTimer = window.setTimeout(() => ref.pop.classList.remove("is-active"), 840);
+      }
+
+      ref.el.classList.remove("is-hit");
+      void ref.el.offsetWidth;
+      ref.el.classList.add("is-hit");
+      window.clearTimeout(ref.hitTimer);
+      ref.hitTimer = window.setTimeout(() => ref.el.classList.remove("is-hit"), 500);
+
+      if (options.firstClaim) {
+        ref.el.classList.remove("just-claimed");
+        void ref.el.offsetWidth;
+        ref.el.classList.add("just-claimed");
+        window.clearTimeout(ref.claimTimer);
+        ref.claimTimer = window.setTimeout(() => ref.el.classList.remove("just-claimed"), 720);
+      }
+    }
+
+    function claimMission(missionId) {
+      if (!missionsReady()) return;
+
+      const mission = levelState.missions.find((item) => item.id === missionId);
+      const stats = levelState.stats.get(missionId);
+      if (!mission || !stats) return;
+
+      if (stats.claimed) {
+        const lost = stats.score;
+        stats.claimed = false;
+        stats.score = 0;
+        updateMissionCard(missionId, { animate: true, points: -lost });
+        updateMissionSummary();
+        updateMissionActions();
+        ui.missionAnnouncer.textContent = `${mission.id} 任务已撤销，恢复初始状态。`;
+        return;
+      }
+
+      const points = Number(mission[CLAIM_SCORE_FIELD]) || 0;
+      const highText = scoreDisplayText(mission, HIGH_SCORE_FIELD, "highDisplay");
+      stats.claimed = true;
+      stats.score = points;
+      updateMissionCard(missionId, { animate: true, points, firstClaim: true });
+      updateMissionSummary();
+      updateMissionActions();
+      ui.missionAnnouncer.textContent = `${mission.id} 任务已完成，获得 ${highText}；再次点击可撤销。`;
+    }
+
+    function createMissionStats() {
+      return new Map(levelState.missions.map((mission) => [
+        mission.id,
+        { claimed: false, score: 0 }
+      ]));
+    }
+
+    function updateMissionSummary() {
+      updateLevelHint();
+    }
+
+    function updateLevelHint() {
+      if (missionsReady() && levelState.activeLevel) {
+        ui.levelHint.textContent = `${levelState.activeLevel.name} · ${levelState.missions.map((mission) => mission.id).join(" / ")}`;
+      } else {
+        ui.levelHint.textContent = "选择关卡后，从 A / B / C 各挑 1 个任务";
+      }
+    }
+
+    function updateMissionActions() {
+      ui.reselectMissions.disabled = !missionsReady();
+    }
+
+    function openMissionPicker(levelId, trigger) {
+      const level = LEVEL_DATA[levelId];
+      if (!level) return;
+
+      window.clearTimeout(levelState.picker.autoTimer);
+      window.clearTimeout(levelState.picker.closeTimer);
+
+      levelState.picker.levelId = levelId;
+      levelState.picker.selections = { A: null, B: null, C: null };
+      levelState.picker.locked = false;
+      levelState.picker.previousFocus = trigger || null;
+      ui.levelSelect.value = levelId;
+
+      ui.pickerTitle.textContent = `${level.name} · 任务简报`;
+      ui.pickerSubtitle.textContent = `${level.code} · 从 A、B、C 每组各选择 1 个任务`;
+      ui.pickerBody.innerHTML = buildMissionPickerGroups(level);
+      ui.pickerProgressText.textContent = "0 / 3";
+      ui.pickerDots.forEach((dot) => dot.classList.remove("is-filled"));
+      ui.pickerFootnote.textContent = "从 A、B、C 每组各选择 1 个任务，选满 3 个后自动开始";
+      ui.pickerClose.disabled = false;
+      ui.pickerCancel.disabled = false;
+      ui.missionSheet.classList.remove("is-ready");
+
+      updatePickerUI();
+
+      ui.missionPicker.hidden = false;
+      document.body.classList.add("modal-open");
+      requestAnimationFrame(() => {
+        ui.missionPicker.classList.add("is-open");
+        const firstOption = ui.pickerBody.querySelector(".picker-option");
+        (firstOption || ui.pickerClose).focus({ preventScroll: true });
+      });
+    }
+
+    function buildMissionPickerGroups(level) {
+      return `<div class="picker-groups">${MISSION_GROUP_ORDER.map((groupKey) => {
+        const group = MISSION_GROUPS[groupKey];
+        const missions = level.groups[groupKey] || [];
+
+        return `
+          <section class="picker-group" data-group="${groupKey}" style="--mission-accent:${group.accent};--mission-rgb:${group.rgb};">
+            <div class="picker-group-head">
+              <span class="picker-group-badge" aria-hidden="true">${groupKey}</span>
+              <span class="picker-group-title"><strong>${group.name}</strong><small>${group.en} · 2 选 1</small></span>
+              <span class="picker-group-count" data-group-count>0 / 1</span>
+            </div>
+            <div class="picker-options">
+              ${missions.map((mission) => `
+                <button class="picker-option" type="button" data-group="${groupKey}" data-mission-id="${mission.id}" aria-pressed="false">
+                  <span class="picker-option-art"><img src="${mission.image}" alt="" draggable="false"></span>
+                  <span class="picker-option-info">
+                    <span class="picker-option-id">${mission.id} · 任务 ${mission.id.slice(1)}</span>
+                    <span class="picker-option-scores"><span>${HIGH_SCORE_LABEL} <b>${mission.highDisplay || `+${mission[HIGH_SCORE_FIELD]}`}</b></span><span>${LOW_SCORE_LABEL} <b>${mission.lowDisplay || `+${mission[LOW_SCORE_FIELD]}`}</b></span></span>
+                  </span>
+                  <span class="picker-check" aria-hidden="true">✓</span>
+                </button>
+              `).join("")}
+            </div>
+          </section>
+        `;
+      }).join("")}</div>`;
+    }
+
+    function updatePickerUI() {
+      const selection = levelState.picker.selections;
+      const selectedCount = MISSION_GROUP_ORDER.filter((group) => selection[group]).length;
+
+      ui.pickerBody.querySelectorAll(".picker-option").forEach((button) => {
+        const isSelected = selection[button.dataset.group] === button.dataset.missionId;
+        button.classList.toggle("is-selected", isSelected);
+        button.setAttribute("aria-pressed", String(isSelected));
+      });
+
+      ui.pickerBody.querySelectorAll(".picker-group").forEach((groupEl) => {
+        const group = groupEl.dataset.group;
+        const countEl = groupEl.querySelector("[data-group-count]");
+        const isSelected = Boolean(selection[group]);
+        if (countEl) countEl.textContent = isSelected ? "1 / 1" : "0 / 1";
+      });
+
+      ui.pickerProgressText.textContent = `${selectedCount} / 3`;
+      ui.pickerDots.forEach((dot, index) => dot.classList.toggle("is-filled", index < selectedCount));
+
+      if (selectedCount === 3 && !levelState.picker.locked) {
+        lockMissionPicker();
+      }
+    }
+
+    function selectPendingMission(group, missionId) {
+      if (levelState.picker.locked || !MISSION_GROUPS[group]) return;
+
+      const current = levelState.picker.selections[group];
+      levelState.picker.selections[group] = current === missionId ? null : missionId;
+      updatePickerUI();
+    }
+
+    function lockMissionPicker() {
+      levelState.picker.locked = true;
+      ui.missionSheet.classList.add("is-ready");
+      ui.pickerFootnote.textContent = "三组任务已选满，正在进入任务…";
+      ui.pickerClose.disabled = true;
+      ui.pickerCancel.disabled = true;
+      ui.pickerBody.querySelectorAll(".picker-option").forEach((button) => {
+        button.disabled = true;
+      });
+
+      window.clearTimeout(levelState.picker.autoTimer);
+      levelState.picker.autoTimer = window.setTimeout(
+        commitMissionSelection,
+        reduceMotion.matches ? 60 : 480
+      );
+    }
+
+    function commitMissionSelection() {
+      window.clearTimeout(levelState.picker.autoTimer);
+      levelState.picker.autoTimer = null;
+
+      const level = LEVEL_DATA[levelState.picker.levelId];
+      const selections = levelState.picker.selections;
+      if (!level || MISSION_GROUP_ORDER.some((group) => !selections[group])) {
+        cancelMissionPicker();
+        return;
+      }
+
+      const missions = MISSION_GROUP_ORDER.map((group) => {
+        const mission = level.groups[group].find((item) => item.id === selections[group]);
+        return mission ? { ...mission, group } : null;
+      }).filter(Boolean);
+
+      levelState.activeLevelId = levelState.picker.levelId;
+      levelState.activeLevel = level;
+      levelState.missions = missions;
+      levelState.stats = createMissionStats();
+      ui.levelSelect.value = levelState.picker.levelId;
+
+      closeMissionPicker({ restoreFocus: false, immediate: true });
+      renderMissionCards();
+      updateMissionSummary();
+      updateMissionActions();
+
+      ui.levelSelect.value = levelState.activeLevelId;
+      startNewGame(false);
+      setStatus(`任务已就绪 · ${missions.map((mission) => mission.id).join(" / ")} · 点击「翻牌」开始`, "ready");
+
+      const firstMission = ui.missions.querySelector(".mission-card");
+      if (firstMission) firstMission.focus({ preventScroll: true });
+    }
+
+    function closeMissionPicker(options = {}) {
+      if (ui.missionPicker.hidden) return;
+
+      const restoreFocus = options.restoreFocus !== false;
+      const immediate = Boolean(options.immediate);
+      const focusTarget = options.focusTarget || levelState.picker.previousFocus;
+
+      window.clearTimeout(levelState.picker.autoTimer);
+      window.clearTimeout(levelState.picker.closeTimer);
+      levelState.picker.autoTimer = null;
+      ui.missionPicker.classList.remove("is-open");
+      ui.missionSheet.classList.remove("is-ready");
+      document.body.classList.remove("modal-open");
+      ui.pickerClose.disabled = false;
+      ui.pickerCancel.disabled = false;
+
+      const finish = () => {
+        ui.missionPicker.hidden = true;
+        ui.pickerBody.innerHTML = "";
+        levelState.picker.levelId = null;
+        levelState.picker.selections = { A: null, B: null, C: null };
+        levelState.picker.locked = false;
+        levelState.picker.autoTimer = null;
+        levelState.picker.closeTimer = null;
+        if (restoreFocus && focusTarget && focusTarget.isConnected) {
+          focusTarget.focus({ preventScroll: true });
+        }
+        levelState.picker.previousFocus = null;
+      };
+
+      if (immediate) {
+        finish();
+      } else {
+        levelState.picker.closeTimer = window.setTimeout(finish, reduceMotion.matches ? 20 : 210);
+      }
+    }
+
+    function cancelMissionPicker() {
+      if (ui.missionPicker.hidden || levelState.picker.locked) return;
+
+      const trigger = levelState.picker.previousFocus;
+      ui.levelSelect.value = levelState.activeLevelId || "";
+      closeMissionPicker({ restoreFocus: true, focusTarget: trigger });
+    }
+
+    function trapFocusWithin(container, event) {
+      const focusables = Array.from(container.querySelectorAll(
+        "button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex='-1'])"
+      )).filter((el) => el.offsetWidth > 0 || el.offsetHeight > 0 || el.getClientRects().length > 0);
+
+      if (!focusables.length) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && (active === first || !container.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (active === last || !container.contains(active))) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    function bindEvents() {
+      ui.newGame.addEventListener("click", () => startNewGame(false));
+      ui.flip.addEventListener("click", flipCards);
+      ui.undoFlip.addEventListener("click", undoFlip);
+
+      ui.lanes.addEventListener("click", (event) => {
+        const button = event.target.closest(".action-card-button");
+        if (!button || !ui.lanes.contains(button)) return;
+        const cardId = Number(button.dataset.cardId);
+        const card = state.cardsById.get(cardId);
+        const lane = button.closest(".lane");
+        if (!card || !lane) return;
+        openCardModal(card, Number(lane.dataset.lane), button);
+      });
+
+      ui.levelSelect.addEventListener("change", () => {
+        const levelId = ui.levelSelect.value;
+        if (!levelId) {
+          ui.levelSelect.value = levelState.activeLevelId || "";
+          return;
+        }
+        openMissionPicker(levelId, ui.levelSelect);
+      });
+
+      ui.reselectMissions.addEventListener("click", () => {
+        if (!missionsReady()) return;
+        openMissionPicker(levelState.activeLevelId, ui.reselectMissions);
+      });
+
+      ui.missions.addEventListener("click", (event) => {
+        const card = event.target.closest(".mission-card");
+        if (!card || card.disabled || !ui.missions.contains(card)) return;
+        claimMission(card.dataset.missionId);
+      });
+
+      ui.pickerBody.addEventListener("click", (event) => {
+        const option = event.target.closest(".picker-option");
+        if (!option || option.disabled) return;
+        selectPendingMission(option.dataset.group, option.dataset.missionId);
+      });
+
+      ui.pickerClose.addEventListener("click", cancelMissionPicker);
+      ui.pickerCancel.addEventListener("click", cancelMissionPicker);
+      ui.missionPicker.addEventListener("click", (event) => {
+        if (event.target.closest("[data-mission-cancel]")) cancelMissionPicker();
+      });
+
+      ui.modalClose.addEventListener("click", closeCardModal);
+      ui.cardModal.addEventListener("click", (event) => {
+        if (event.target.closest("[data-close]")) closeCardModal();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (!ui.missionPicker.hidden) {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            cancelMissionPicker();
+          } else if (event.key === "Tab") {
+            trapFocusWithin(ui.missionSheet, event);
+          }
+          return;
+        }
+
+        if (!ui.cardModal.hidden) {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            closeCardModal();
+          } else if (event.key === "Tab") {
+            event.preventDefault();
+            ui.modalClose.focus({ preventScroll: true });
+          }
+          return;
+        }
+
+        if (event.altKey || event.ctrlKey || event.metaKey) return;
+
+        const target = event.target;
+        const isInteractive = target instanceof Element && target.closest("button, a, input, textarea, select, [contenteditable='true']");
+
+        if (event.code === "Space" && !isInteractive) {
+          event.preventDefault();
+          flipCards();
+          return;
+        }
+
+        if ((event.key === "n" || event.key === "N") && !isInteractive) {
+          event.preventDefault();
+          if (missionsReady()) startNewGame(false);
+        }
+      });
+    }
+
+    function startNewGame(isFirstLoad) {
+      window.clearTimeout(state.timer);
+      state.timer = null;
+
+      closeCardModal({ restoreFocus: false, immediate: true });
+
+      state.busy = false;
+      state.round = 0;
+      state.hasDrawn = false;
+      state.history = [];
+      state.cardsById.clear();
+
+      const deck = shuffleInPlace(createDeck());
+      validateDeck(deck);
+
+      state.columns = PILE_META.map((_, index) => ({
+        draw: deck.slice(index * PILE_SIZE, (index + 1) * PILE_SIZE),
+        discard: [],
+        current: null,
+        recycleCount: 0
+      }));
+
+      deck.forEach((card) => state.cardsById.set(card.id, card));
+
+      renderBoard({ shuffle: true });
+      updateStats();
+      updateControls();
+      setStatus(
+        missionsReady()
+          ? (isFirstLoad
+            ? "三列各 21 张 · 数字面朝上 · 点击「翻牌」翻开行动面"
+            : "牌堆已重新洗混 · 三列各 21 张 · 等待翻牌")
+          : "等待任务简报 · 请先在顶部选择关卡与任务",
+        "ready"
+      );
+    }
+
+    function captureBoardSnapshot() {
+      return {
+        round: state.round,
+        hasDrawn: state.hasDrawn,
+        columns: state.columns.map((column) => ({
+          draw: column.draw.slice(),
+          discard: column.discard.slice(),
+          current: column.current,
+          recycleCount: column.recycleCount
+        }))
+      };
+    }
+
+    function flipCards() {
+      if (!missionsReady()) {
+        setStatus("请先选择关卡，并从 A / B / C 各选 1 个任务", "warn");
+        return;
+      }
+
+      if (state.busy) return;
+
+      const hasAnyCard = state.columns.some((column) =>
+        column.draw.length > 0 || column.discard.length > 0 || column.current
+      );
+
+      if (!hasAnyCard) {
+        setStatus("三列都已没有可翻的牌 · 点击「新游戏」重新开始", "warn");
+        ui.newGame.focus({ preventScroll: true });
+        return;
+      }
+
+      state.history.push(captureBoardSnapshot());
+      state.busy = true;
+      state.round += 1;
+
+      // 每列独立处理：上一回合行动牌进入本列弃牌；抽空后只用本列弃牌回洗。
+      const recycledAmounts = state.columns.map((column) => {
+        let recycled = 0;
+
+        if (column.current) {
+          column.discard.push(column.current);
+          column.current = null;
+        }
+
+        // 正常流程下，上回合抽空后已经预回洗；这里兜底处理空堆。
+        if (column.draw.length === 0 && column.discard.length > 0) {
+          recycled += column.discard.length;
+          column.draw = shuffleInPlace(column.discard.splice(0));
+          column.recycleCount += 1;
+        }
+
+        if (column.draw.length > 0) {
+          column.current = column.draw.pop();
+        }
+
+        // 本回合抽走最后一张后，立刻用该列弃牌形成下一轮的数字牌堆。
+        if (column.draw.length === 0 && column.discard.length > 0) {
+          recycled += column.discard.length;
+          column.draw = shuffleInPlace(column.discard.splice(0));
+          column.recycleCount += 1;
+        }
+
+        const conserved = column.draw.length + column.discard.length + (column.current ? 1 : 0);
+        console.assert(conserved === PILE_SIZE, `第 ${state.round} 回合：该列卡牌数量异常 (${conserved})`);
+
+        return recycled;
+      });
+
+      state.hasDrawn = true;
+
+      renderBoard({ animate: true, recycledAmounts });
+      updateStats();
+      updateControls();
+      setStatus(buildStatusText(recycledAmounts), recycledAmounts.some(Boolean) ? "recycle" : "active");
+
+      window.clearTimeout(state.timer);
+      state.timer = window.setTimeout(() => {
+        state.busy = false;
+        state.timer = null;
+        updateControls();
+      }, reduceMotion.matches ? 60 : ANIMATION_MS);
+    }
+
+    function undoFlip() {
+      if (!missionsReady() || state.busy || state.history.length === 0) return;
+
+      const snapshot = state.history.pop();
+      state.columns = snapshot.columns;
+      state.round = snapshot.round;
+      state.hasDrawn = snapshot.hasDrawn;
+
+      renderBoard({ animate: false });
+      updateStats();
+      updateControls();
+
+      const actionWords = snapshot.columns
+        .map((column) => {
+          if (!column.current) return null;
+          const action = ACTIONS[column.current.action];
+          return `${action.emoji}${action.label}`;
+        })
+        .filter(Boolean)
+        .join(" · ");
+
+      if (snapshot.round > 0) {
+        setStatus(`已回退到第 ${snapshot.round} 回合${actionWords ? ` · ${actionWords}` : ""}`, "ready");
+      } else {
+        setStatus("已回到初始牌面 · 点击「翻牌」开始", "ready");
+      }
+    }
+
+    function buildStatusText(recycledAmounts) {
+      const actionWords = state.columns
+        .map((column) => {
+          if (!column.current) return "无牌";
+          const action = ACTIONS[column.current.action];
+          return `${action.emoji}${action.label}`;
+        })
+        .join(" · ");
+
+      let message = `第 ${state.round} 回合 · ${actionWords}`;
+      const names = recycledAmounts
+        .map((amount, index) => (amount > 0 ? PILE_META[index].name : null))
+        .filter(Boolean);
+
+      if (names.length === 3) {
+        message += " · 三列弃牌已各自回洗";
+      } else if (names.length > 0) {
+        message += ` · ${names.join("、")}弃牌已独立回洗`;
+      }
+
+      return message;
+    }
+
+    function renderBoard(options = {}) {
+      const animate = Boolean(options.animate);
+      const shuffle = Boolean(options.shuffle);
+      const recycledAmounts = Array.isArray(options.recycledAmounts) ? options.recycledAmounts : [0, 0, 0];
+
+      state.columns.forEach((column, index) => {
+        const ref = laneRefs[index];
+        if (!ref) return;
+
+        const meta = PILE_META[index];
+        const topCard = column.draw.length ? column.draw[column.draw.length - 1] : null;
+        const drawCount = column.draw.length;
+        const discardCount = column.discard.length;
+        const recycledAmount = recycledAmounts[index] || 0;
+
+        ref.el.classList.toggle("has-pair", state.hasDrawn);
+        ref.el.classList.toggle("is-recycled", recycledAmount > 0);
+        ref.el.dataset.depth = String(Math.min(3, drawCount));
+        ref.count.textContent = String(drawCount);
+        ref.discard.textContent = String(discardCount);
+
+        let label = `${meta.name}，牌堆剩余 ${drawCount} 张，弃牌 ${discardCount} 张`;
+        if (topCard) label += `，牌堆顶数字 ${topCard.number}`;
+        if (state.hasDrawn) {
+          label += column.current
+            ? `，本回合行动 ${ACTIONS[column.current.action].label}`
+            : "，本回合无行动";
+        }
+        ref.el.setAttribute("aria-label", label);
+
+        ref.drawSlot.innerHTML = topCard
+          ? drawCardMarkup(topCard, { animate, shuffle })
+          : emptyFaceMarkup("牌堆已空", "WAITING FOR RESHUFFLE");
+
+        if (state.hasDrawn) {
+          ref.actionSlot.innerHTML = column.current
+            ? actionCardMarkup(column.current, { animate, laneIndex: index })
+            : emptyFaceMarkup("暂无行动牌", "NO ACTION");
+        } else {
+          ref.actionSlot.innerHTML = "";
+        }
+
+        if (recycledAmount > 0) {
+          ref.note.textContent = `本列回洗 +${recycledAmount}`;
+        } else if (state.hasDrawn) {
+          ref.note.textContent = "行动面已刷新";
+        } else {
+          ref.note.textContent = "等待翻牌";
+        }
+      });
+    }
+
+    function drawCardMarkup(card, options = {}) {
+      const action = ACTIONS[card.action];
+      const serial = String(card.id).padStart(2, "0");
+      const classes = ["draw-stack"];
+      if (options.animate) classes.push("is-new");
+      if (options.shuffle) classes.push("is-shuffling");
+
+      return `
+        <div class="${classes.join(" ")}">
+          <span class="draw-layer draw-layer--1" aria-hidden="true"></span>
+          <span class="draw-layer draw-layer--2" aria-hidden="true"></span>
+          <span class="card-shell card-shell--number" style="--accent:${action.color};--accent-rgb:${action.rgb};" aria-hidden="true">
+            <span class="card-paper card-paper--number">
+              <span class="corner-chip corner-chip--left">${actionGlyphMarkup(card.action)}</span>
+              <span class="corner-chip corner-chip--right">${actionGlyphMarkup(card.action)}</span>
+
+              <span class="card-topline">
+                <span>SS-${serial}</span>
+                <span class="topline-sep"></span>
+                <span>STARSHIP</span>
+              </span>
+
+              <span class="number-stage">
+                <span class="number-watermark">${actionGlyphMarkup(card.action, "watermark-glyph")}</span>
+                <span class="big-number">${card.number}</span>
+                <span class="number-caption">TOP OF DECK / 牌堆顶</span>
+              </span>
+
+              <span class="face-band">
+                <span class="band-kicker">NUMBER FACE</span>
+                <span class="band-title">数字面</span>
+                <span class="band-end">下一抽</span>
+              </span>
+            </span>
+          </span>
+        </div>
+      `;
+    }
+
+    function actionCardMarkup(card, options = {}) {
+      const action = ACTIONS[card.action];
+      const laneIndex = Number(options.laneIndex || 0);
+      const enterClass = options.animate ? " is-new" : "";
+
+      return `
+        <button
+          class="action-card-button${enterClass}"
+          type="button"
+          data-card-id="${card.id}"
+          style="--lane-index:${laneIndex};"
+          aria-label="行动牌，数字 ${card.number}，行动 ${action.label}。点击放大"
+        >
+          ${actionFaceMarkup(card)}
+        </button>
+      `;
+    }
+
+    function actionFaceMarkup(card) {
+      const action = ACTIONS[card.action];
+      const serial = String(card.id).padStart(2, "0");
+
+      return `
+        <span class="card-shell card-shell--action" style="--accent:${action.color};--accent-rgb:${action.rgb};" aria-hidden="true">
+          <span class="card-paper card-paper--action">
+            <span class="face-rune face-rune--left">✦</span>
+            <span class="face-rune face-rune--right">✦</span>
+
+            <span class="card-topline">
+              <span>SS-${serial}</span>
+              <span class="topline-sep"></span>
+              <span>ACTION FACE</span>
+            </span>
+
+            <span class="action-stage">
+              ${actionGlyphMarkup(card.action, "big-action-icon")}
+              <span class="big-action-name">${action.label}</span>
+              <span class="big-action-en">${action.en}</span>
+            </span>
+
+            <span class="face-band face-band--action">
+              <span class="band-kicker">ACTION FACE</span>
+              <span class="band-title">行动面</span>
+              <span class="band-end">本回合</span>
+            </span>
+          </span>
+          <span class="card-shine"></span>
+        </span>
+      `;
+    }
+
+    function emptyFaceMarkup(title, subtitle) {
+      return `
+        <div class="empty-face" aria-hidden="true">
+          <span class="empty-symbol">∅</span>
+          <strong>${title}</strong>
+          <small>${subtitle}</small>
+        </div>
+      `;
+    }
+
+    function updateStats() {
+      const totalDraw = state.columns.reduce((total, column) => total + column.draw.length, 0);
+      const totalRecycles = state.columns.reduce((total, column) => total + column.recycleCount, 0);
+
+      ui.statDraw.textContent = String(totalDraw);
+      ui.statRound.textContent = String(state.round).padStart(2, "0");
+      ui.statRecycles.textContent = String(totalRecycles);
+    }
+
+    function updateControls() {
+      const ready = missionsReady();
+      const hasAnyCard = state.columns.some((column) =>
+        column.draw.length > 0 || column.discard.length > 0 || column.current
+      );
+
+      ui.newGame.disabled = !ready;
+      ui.flip.disabled = !ready || state.busy || !hasAnyCard;
+      ui.flip.classList.toggle("is-busy", state.busy && ready);
+      ui.undoFlip.disabled = !ready || state.busy || state.history.length === 0;
+
+      if (!ready) {
+        ui.flipGlyph.textContent = "◎";
+        ui.flipKicker.textContent = "MISSIONS";
+        ui.flipMain.textContent = "选任务";
+        ui.flip.setAttribute("aria-label", "请先选择关卡与任务");
+      } else if (state.busy) {
+        ui.flipGlyph.textContent = "◌";
+        ui.flipKicker.textContent = "SCANNING";
+        ui.flipMain.textContent = "抽取中";
+        ui.flip.setAttribute("aria-label", "正在翻牌");
+      } else if (!hasAnyCard) {
+        ui.flipGlyph.textContent = "∅";
+        ui.flipKicker.textContent = "EMPTY";
+        ui.flipMain.textContent = "无牌可翻";
+        ui.flip.setAttribute("aria-label", "没有可翻的牌，请开始新游戏");
+      } else {
+        ui.flipGlyph.textContent = "⇣";
+        ui.flipKicker.textContent = "SPACE";
+        ui.flipMain.textContent = "翻牌";
+        ui.flip.setAttribute("aria-label", "从三列牌堆顶部各翻一张牌");
+      }
+    }
+
+    function setStatus(message, tone) {
+      ui.statusText.textContent = message;
+      ui.status.dataset.tone = tone || "ready";
+    }
+
+    function openCardModal(card, laneIndex, trigger) {
+      window.clearTimeout(state.modalTimer);
+      state.modalTimer = null;
+      state.modalTrigger = trigger || null;
+
+      const action = ACTIONS[card.action];
+      const pile = PILE_META[laneIndex] || PILE_META[0];
+      ui.modalCardWrap.innerHTML = actionFaceMarkup(card);
+      ui.modalCaption.innerHTML = `
+        <span>${pile.name} · 数字 ${card.number} · ${String(card.id).padStart(2, "0")} / 63</span>
+        <strong>${action.emoji} ${action.label}行动</strong>
+      `;
+
+      ui.cardModal.hidden = false;
+      document.body.classList.add("modal-open");
+      requestAnimationFrame(() => ui.cardModal.classList.add("is-open"));
+      ui.modalClose.focus({ preventScroll: true });
+    }
+
+    function closeCardModal(options = {}) {
+      if (ui.cardModal.hidden && !ui.cardModal.classList.contains("is-open")) return;
+
+      const restoreFocus = options.restoreFocus !== false;
+      const immediate = Boolean(options.immediate);
+      const trigger = state.modalTrigger;
+
+      ui.cardModal.classList.remove("is-open");
+      document.body.classList.remove("modal-open");
+      window.clearTimeout(state.modalTimer);
+
+      const finish = () => {
+        ui.cardModal.hidden = true;
+        ui.modalCardWrap.innerHTML = "";
+        ui.modalCaption.innerHTML = "";
+        state.modalTimer = null;
+        if (restoreFocus && trigger && trigger.isConnected) {
+          trigger.focus({ preventScroll: true });
+        }
+        state.modalTrigger = null;
+      };
+
+      if (immediate) {
+        finish();
+      } else {
+        state.modalTimer = window.setTimeout(finish, reduceMotion.matches ? 20 : 210);
+      }
+    }
+  })();
+  </script>
+</body>
+</html>
