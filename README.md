@@ -33,27 +33,12 @@ Filp Assistant为经典多人联机版。
 
 **可配置数据版工具（依赖关联文件）**
 1. index.html 经典联机模式：
-data/
-└─ levels.js                    # 唯一外部 JS 配置
-
-action image/                   # 6 张行动图标
-├─ robot.png
-├─ energy.png
-├─ plant.png
-├─ water.png
-├─ astronaut.png
-└─ planning.png
-
-mission image/                  # 49 张任务资源
-├─ ACCOMPLISHED.png             # 完成印章
-├─ M1_A1.png … M1_C2.png
-├─ M2_A1.png … M2_C2.png
-├─ …
-└─ M8_A1.png … M8_C2.png        # 共 8 关 × 6 张 = 48 张
+- data：关卡数据，唯一外部 JS 配置
+- action image：含6 张行动图标
+- mission image：含49张任务资源
 
 2. solo.html单人战役模式：
 除了上面的data、action image、mission image文件以外，还额外需要文件
-solo image/
-  SoloBonus.png  # 亚星奖励图标
+- solo image：含亚星奖励图标
 
 PS:index.html 不是 solo.html 的依赖
