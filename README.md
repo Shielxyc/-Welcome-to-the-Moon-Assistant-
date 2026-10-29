@@ -23,8 +23,8 @@
 
 > “本工具仅供个人线下游玩辅助使用，不包含任何实体卡牌的商业售卖。所有游戏规则及图标版权均归原出版商（Blue Cocker Games）及桌游星球（桌游代理商）所有。请支持正版桌游。”
 > 
-👉 [点击这里在线游玩双人版](https://github.com/Shielxyc/-Welcome-to-the-Moon-Assistant-/index.html)
-👉 [点击这里在线游玩单人版](https://github.com/Shielxyc/-Welcome-to-the-Moon-Assistant-/solo.html)
+👉 [点击这里在线游玩双人版](https://shielxyc.github.io/-Welcome-to-the-Moon-Assistant-/index.html)
+👉 [点击这里在线游玩单人版](https://shielxyc.github.io/-Welcome-to-the-Moon-Assistant-/solo.html)
 
 
 ## 目录结构说明
